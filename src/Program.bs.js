@@ -15,7 +15,6 @@ var router = CreateHashHistory.default(historyOpts);
 
 function path($$location) {
   var pathname = $$location.pathname;
-  console.log("pathname", pathname);
   var match = pathname[pathname.length - 1 | 0];
   var raw = match === "/" ? pathname.slice(0, -1) : pathname;
   return Belt_List.fromArray(raw.split("/"));
@@ -31,6 +30,14 @@ function hash($$location) {
   return raw.slice(1);
 }
 
+function getRoute($$location) {
+  return /* record */[
+          /* path */path($$location),
+          /* hash */hash($$location),
+          /* search */search($$location)
+        ];
+}
+
 function makeRoute(path, hash, search) {
   return /* record */[
           /* path */path,
@@ -44,11 +51,10 @@ function fromRouteDefault(_, _$1) {
 }
 
 function toRouteDefault() {
-  console.log("toRoute default");
   return /* NoTransition */1;
 }
 
-function updateDefault() {
+function updateDefault(_, _$1) {
   return /* NoUpdate */0;
 }
 
@@ -68,8 +74,8 @@ function program(debug) {
 
 function programStateWrapper(initState, looper) {
   var currentState = /* record */[/* contents */initState];
-  var runner = function () {
-    var update = Curry._1(looper[/* dispatch */1], currentState[0]);
+  var runner = function (action) {
+    var update = Curry._2(looper[/* dispatch */1], action, currentState[0]);
     var nextState = update ? update[0] : currentState[0];
     var routeUpdate = Curry._1(looper[/* updateRoute */3], /* record */[
           /* previous */currentState[0],
@@ -81,13 +87,11 @@ function programStateWrapper(initState, looper) {
       var url = Belt_List.reduce(routeUpdate[0][/* path */0], "/", (function (prim, prim$1) {
               return prim + prim$1;
             }));
-      console.log(url);
       router.replace(url);
     } else {
       var url$1 = Belt_List.reduce(routeUpdate[0][/* path */0], "/", (function (prim, prim$1) {
               return prim + prim$1;
             }));
-      console.log(url$1);
       router.push(url$1);
     }
     currentState[0] = nextState;
@@ -99,18 +103,10 @@ function programStateWrapper(initState, looper) {
     return /* () */0;
   };
   BsHistory.listen((function ($$location, action) {
-            var route = function () {
-              return /* record */[
-                      /* path */path($$location),
-                      /* hash */hash($$location),
-                      /* search */search($$location)
-                    ];
-            };
             var routeAction = action !== 4003185 ? (
-                action >= 893009402 ? (console.log("push"), /* Push */1) : (console.log("replace"), /* Replace */3)
-              ) : (console.log("pop"), /* Pop */2);
-            console.log("listener");
-            var update = Curry._2(looper[/* getFromRoute */2], routeAction, route(/* () */0));
+                action >= 893009402 ? (console.log("listener: push"), /* Push */1) : (console.log("listener: replace"), /* Replace */3)
+              ) : (console.log("listener: pop"), /* Pop */2);
+            var update = Curry._2(looper[/* getFromRoute */2], routeAction, getRoute($$location));
             var nextState = update ? update[0] : currentState[0];
             currentState[0] = nextState;
             var self = /* record */[
@@ -134,7 +130,7 @@ function loop(update, view, toRoute, fromRoute, enqueueRender) {
           /* start */(function (self) {
               return Curry._1(enqueueRender, Curry._1(view, self));
             }),
-          /* dispatch */Curry.__1(update),
+          /* dispatch */Curry.__2(update),
           /* getFromRoute */Curry.__2(fromRoute),
           /* updateRoute */Curry.__1(toRoute),
           /* render */(function (self) {
@@ -144,16 +140,18 @@ function loop(update, view, toRoute, fromRoute, enqueueRender) {
 }
 
 function startup(program, renderer) {
-  var initRoute = function () {
-    var $$location = router.location;
-    return /* record */[
-            /* path */path($$location),
-            /* hash */hash($$location),
-            /* search */search($$location)
-          ];
-  };
-  var match = Curry._2(program[/* fromRoute */1], /* Init */0, initRoute(/* () */0));
+  var $$location = router.location;
+  var match = Curry._2(program[/* fromRoute */1], /* Init */0, getRoute($$location));
   var initState = match ? match[0] : Pervasives.failwith("Must init a state");
+  var match$1 = Curry._1(program[/* toRoute */2], /* record */[
+        /* previous */initState,
+        /* next */initState
+      ]);
+  if (typeof match$1 === "number" && match$1 !== 0) {
+    
+  } else {
+    Pervasives.failwith("toRoute should result in no transition when called with initial state.");
+  }
   var looper = loop(program[/* update */3], program[/* view */4], program[/* toRoute */2], program[/* fromRoute */1], renderer);
   programStateWrapper(initState, looper);
   return /* () */0;
@@ -175,6 +173,7 @@ exports.router = router;
 exports.path = path;
 exports.search = search;
 exports.hash = hash;
+exports.getRoute = getRoute;
 exports.makeRoute = makeRoute;
 exports.defaultRoute = defaultRoute;
 exports.fromRouteDefault = fromRouteDefault;

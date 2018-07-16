@@ -60,15 +60,31 @@ function app() {
                               ], "", "")]);
               }
             }),
-          /* update */(function (state) {
-              return /* Update */[/* record */[/* counter */state[/* counter */0] + 1 | 0]];
+          /* update */(function (action, state) {
+              switch (action) {
+                case 0 : 
+                    return /* Update */[/* record */[/* counter */state[/* counter */0] + 1 | 0]];
+                case 1 : 
+                    return /* Update */[/* record */[/* counter */state[/* counter */0] - 1 | 0]];
+                case 2 : 
+                    return /* NoUpdate */0;
+                
+              }
             }),
           /* view */(function (self) {
               return React.createElement("div", undefined, String(self[/* state */0][/* counter */0]), React.createElement("button", {
                               onClick: (function () {
-                                  return Curry._1(self[/* send */1], /* () */0);
+                                  return Curry._1(self[/* send */1], /* Increment */0);
                                 })
-                            }, "Increment"));
+                            }, "Increment"), React.createElement("button", {
+                              onClick: (function () {
+                                  return Curry._1(self[/* send */1], /* Decrement */1);
+                                })
+                            }, "Decrement"), React.createElement("button", {
+                              onClick: (function () {
+                                  return Curry._1(self[/* send */1], /* Nothing */2);
+                                })
+                            }, "Do Nothing"));
             })
         ];
 }

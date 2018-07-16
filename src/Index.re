@@ -1,6 +1,10 @@
 Belt.Debug.setupChromeDebugger();
 
 type state = {counter: int};
+type action =
+  | Increment
+  | Decrement
+  | Nothing;
 
 let app = () => {
   let program = Program.routerProgram("CounterApp");
@@ -24,7 +28,6 @@ let app = () => {
         }
       };
     },
-    /* toRoute: _s => Program.NoTransition, */
     toRoute: ({previous, next}) => {
       Js.log2(previous, next);
       if (previous == next) {
@@ -39,12 +42,23 @@ let app = () => {
         );
       };
     },
-    update: state => Program.Update({counter: state.counter + 1}),
+    update: (action, state) =>
+      switch (action) {
+      | Increment => Program.Update({counter: state.counter + 1})
+      | Decrement => Program.Update({counter: state.counter - 1})
+      | Nothing => Program.NoUpdate
+      },
     view: self =>
       <div>
         (ReasonReact.string(string_of_int(self.state.counter)))
-        <button onClick=(_ => self.send())>
+        <button onClick=(_ => self.send(Increment))>
           (ReasonReact.string("Increment"))
+        </button>
+        <button onClick=(_ => self.send(Decrement))>
+          (ReasonReact.string("Decrement"))
+        </button>
+        <button onClick=(_ => self.send(Nothing))>
+          (ReasonReact.string("Do Nothing"))
         </button>
       </div>,
   };
