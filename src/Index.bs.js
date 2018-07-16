@@ -8,6 +8,7 @@ var Caml_obj = require("bs-platform/lib/js/caml_obj.js");
 var Belt_Debug = require("bs-platform/lib/js/belt_Debug.js");
 var ReactDOMRe = require("reason-react/src/ReactDOMRe.js");
 var Caml_format = require("bs-platform/lib/js/caml_format.js");
+var Route$ReasonTea = require("./Route.bs.js");
 var Program$ReasonTea = require("./Program.bs.js");
 
 Belt_Debug.setupChromeDebugger(/* () */0);
@@ -48,7 +49,7 @@ function app() {
               if (Caml_obj.caml_equal(param[/* previous */0], next)) {
                 return /* NoTransition */1;
               } else {
-                return /* Push */Block.__(0, [Program$ReasonTea.makeRoute(/* :: */[
+                return /* Push */Block.__(0, [Route$ReasonTea.make(/* :: */[
                                 "",
                                 /* :: */[
                                   String(next[/* counter */0]),

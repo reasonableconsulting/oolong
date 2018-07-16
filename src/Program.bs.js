@@ -5,6 +5,7 @@ var Curry = require("bs-platform/lib/js/curry.js");
 var Belt_List = require("bs-platform/lib/js/belt_List.js");
 var BsHistory = require("bs-history/src/BsHistory.bs.js");
 var Pervasives = require("bs-platform/lib/js/pervasives.js");
+var Route$ReasonTea = require("./Route.bs.js");
 var CreateHashHistory = require("history/createHashHistory");
 
 var historyOpts = {
@@ -13,38 +14,14 @@ var historyOpts = {
 
 var router = CreateHashHistory.default(historyOpts);
 
-function path($$location) {
-  var pathname = $$location.pathname;
-  var match = pathname[pathname.length - 1 | 0];
-  var raw = match === "/" ? pathname.slice(0, -1) : pathname;
-  return Belt_List.fromArray(raw.split("/"));
-}
-
-function search($$location) {
-  var raw = $$location.search;
-  return raw.slice(1);
-}
-
-function hash($$location) {
-  var raw = $$location.hash;
-  return raw.slice(1);
-}
-
 function getRoute($$location) {
-  return /* record */[
-          /* path */path($$location),
-          /* hash */hash($$location),
-          /* search */search($$location)
-        ];
+  return Route$ReasonTea.make(Route$ReasonTea.path($$location), Route$ReasonTea.hash($$location), Route$ReasonTea.search($$location));
 }
 
-function makeRoute(path, hash, search) {
-  return /* record */[
-          /* path */path,
-          /* hash */hash,
-          /* search */search
-        ];
-}
+var defaultRoute = Route$ReasonTea.make(/* :: */[
+      "",
+      /* [] */0
+    ], "", "");
 
 function fromRouteDefault(_, _$1) {
   return /* NoUpdate */0;
@@ -158,22 +135,9 @@ function startup(program, renderer) {
 
 var routerProgram = program;
 
-var defaultRoute = /* record */[
-  /* path : :: */[
-    "",
-    /* [] */0
-  ],
-  /* hash */"",
-  /* search */""
-];
-
 exports.historyOpts = historyOpts;
 exports.router = router;
-exports.path = path;
-exports.search = search;
-exports.hash = hash;
 exports.getRoute = getRoute;
-exports.makeRoute = makeRoute;
 exports.defaultRoute = defaultRoute;
 exports.fromRouteDefault = fromRouteDefault;
 exports.toRouteDefault = toRouteDefault;

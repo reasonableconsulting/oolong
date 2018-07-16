@@ -1,14 +1,9 @@
 type t('action, 'state, 'view) = {
   debug: string,
-  fromRoute: (routeAction, route) => update('state),
+  fromRoute: (routeAction, Route.t) => update('state),
   toRoute: previousAndNextState('state) => routeUpdate,
   update: ('action, 'state) => update('state),
   view: self('action, 'state) => 'view,
-}
-and route = {
-  path: list(string),
-  hash: string,
-  search: string,
 }
 and routeAction =
   | Init
@@ -29,10 +24,17 @@ and update('state) =
   /* | UpdateWithSideEffects('state, self('state, 'action) => unit) */
   | NoUpdate
 and routeUpdate =
-  | Push(route)
-  | Replace(route)
+  | Push(Route.t)
+  | Replace(Route.t)
   | Pop
-  | NoTransition;
+  | NoTransition
+and loop('action, 'state) = {
+  start: self('action, 'state) => unit,
+  dispatch: ('action, 'state) => update('state),
+  getFromRoute: (routeAction, Route.t) => update('state),
+  updateRoute: previousAndNextState('state) => unit,
+  render: self('action, 'state) => unit,
+};
 
 let historyOpts =
   BsHistory.makeHashHistoryOptions(
@@ -43,36 +45,16 @@ let historyOpts =
   );
 let router = BsHistory.createHashHistory(historyOpts);
 
-let path = location => {
-  let pathname = BsHistory.Location.pathname(location);
-  let raw =
-    switch (Js.String.get(pathname, Js.String.length(pathname) - 1)) {
-    | "/" => Js.String.slice(~from=0, ~to_=-1, pathname)
-    | _ => pathname
-    };
+let getRoute = location =>
+  Route.make(
+    ~path=Route.path(location),
+    ~search=Route.search(location),
+    ~hash=Route.hash(location),
+  );
 
-  raw |> Js.String.split("/") |> Belt.List.fromArray;
-};
+let defaultRoute = Route.make(~path=[""], ~hash="", ~search="");
 
-let search = location => {
-  let raw = BsHistory.Location.search(location);
-  raw |> Js.String.sliceToEnd(~from=1);
-};
-let hash = location => {
-  let raw = BsHistory.Location.hash(location);
-  raw |> Js.String.sliceToEnd(~from=1);
-};
-
-let getRoute = location => {
-  path: path(location),
-  search: search(location),
-  hash: hash(location),
-};
-
-let makeRoute = (~path, ~hash, ~search) => {path, hash, search};
-let defaultRoute = {path: [""], hash: "", search: ""};
-
-let fromRouteDefault: (routeAction, route) => update('state) =
+let fromRouteDefault: (routeAction, Route.t) => update('state) =
   (_action, _route) => NoUpdate;
 let toRouteDefault: previousAndNextState('state) => routeUpdate =
   _prevAndNext => NoTransition;
@@ -94,14 +76,6 @@ let program: string => t('action, 'state, 'view) =
     };
     template;
   };
-
-type loop('action, 'state) = {
-  start: self('action, 'state) => unit,
-  dispatch: ('action, 'state) => update('state),
-  getFromRoute: (routeAction, route) => update('state),
-  updateRoute: previousAndNextState('state) => unit,
-  render: self('action, 'state) => unit,
-};
 
 let programStateWrapper: ('state, loop('action, 'state)) => unit =
   (initState, looper) => {
@@ -163,7 +137,7 @@ let loop:
     ~update: ('action, 'state) => update('state),
     ~view: self('action, 'state) => 'view,
     ~toRoute: previousAndNextState('state) => routeUpdate,
-    ~fromRoute: (routeAction, route) => update('state),
+    ~fromRoute: (routeAction, Route.t) => update('state),
     ~enqueueRender: 'view => unit
   ) =>
   loop('action, 'state) =

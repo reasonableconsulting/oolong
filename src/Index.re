@@ -31,7 +31,7 @@ let app = () => {
         Program.NoTransition;
       } else {
         Program.Push(
-          Program.makeRoute(
+          Route.make(
             ~path=["", string_of_int(next.counter)],
             ~search="",
             ~hash="",
