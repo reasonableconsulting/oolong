@@ -1,0 +1,27 @@
+{
+  "name": "reason-tea",
+  "version": "0.1.0",
+  "scripts": {
+    "start": "budo src/Index.bs.js --live",
+    "build": "bsb -make-world",
+    "watch": "bsb -make-world -w",
+    "clean": "bsb -clean-world",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "BuckleScript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "bs-history": "^1.0.0",
+    "history": "^4.7.2",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "reason-react": "^0.5.0"
+  },
+  "devDependencies": {
+    "bs-platform": "^4.0.0",
+    "budo": "^11.3.2"
+  }
+}
