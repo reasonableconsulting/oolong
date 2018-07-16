@@ -77,29 +77,15 @@ function programStateWrapper(initState, looper) {
   var runner = function (action) {
     var update = Curry._2(looper[/* dispatch */1], action, currentState[0]);
     var nextState = update ? update[0] : currentState[0];
-    var routeUpdate = Curry._1(looper[/* updateRoute */3], /* record */[
+    Curry._1(looper[/* updateRoute */3], /* record */[
           /* previous */currentState[0],
           /* next */nextState
         ]);
-    if (typeof routeUpdate === "number") {
-      routeUpdate === 0;
-    } else if (routeUpdate.tag) {
-      var url = Belt_List.reduce(routeUpdate[0][/* path */0], "/", (function (prim, prim$1) {
-              return prim + prim$1;
-            }));
-      router.replace(url);
-    } else {
-      var url$1 = Belt_List.reduce(routeUpdate[0][/* path */0], "/", (function (prim, prim$1) {
-              return prim + prim$1;
-            }));
-      router.push(url$1);
-    }
     currentState[0] = nextState;
-    var self = /* record */[
-      /* state */nextState,
-      /* send */runner
-    ];
-    Curry._1(looper[/* render */4], self);
+    Curry._1(looper[/* render */4], /* record */[
+          /* state */nextState,
+          /* send */runner
+        ]);
     return /* () */0;
   };
   BsHistory.listen((function ($$location, action) {
@@ -109,19 +95,16 @@ function programStateWrapper(initState, looper) {
             var update = Curry._2(looper[/* getFromRoute */2], routeAction, getRoute($$location));
             var nextState = update ? update[0] : currentState[0];
             currentState[0] = nextState;
-            var self = /* record */[
-              /* state */nextState,
-              /* send */runner
-            ];
-            Curry._1(looper[/* render */4], self);
+            Curry._1(looper[/* render */4], /* record */[
+                  /* state */nextState,
+                  /* send */runner
+                ]);
             return /* () */0;
           }))(router);
-  var self_000 = /* state */currentState[0];
-  var self = /* record */[
-    self_000,
-    /* send */runner
-  ];
-  Curry._1(looper[/* start */0], self);
+  Curry._1(looper[/* start */0], /* record */[
+        /* state */currentState[0],
+        /* send */runner
+      ]);
   return /* () */0;
 }
 
@@ -132,7 +115,23 @@ function loop(update, view, toRoute, fromRoute, enqueueRender) {
             }),
           /* dispatch */Curry.__2(update),
           /* getFromRoute */Curry.__2(fromRoute),
-          /* updateRoute */Curry.__1(toRoute),
+          /* updateRoute */(function (prevAndNextState) {
+              var update = Curry._1(toRoute, prevAndNextState);
+              if (typeof update === "number") {
+                update === 0;
+              } else if (update.tag) {
+                var url = Belt_List.reduce(update[0][/* path */0], "/", (function (prim, prim$1) {
+                        return prim + prim$1;
+                      }));
+                router.replace(url);
+              } else {
+                var url$1 = Belt_List.reduce(update[0][/* path */0], "/", (function (prim, prim$1) {
+                        return prim + prim$1;
+                      }));
+                router.push(url$1);
+              }
+              return /* () */0;
+            }),
           /* render */(function (self) {
               return Curry._1(enqueueRender, Curry._1(view, self));
             })

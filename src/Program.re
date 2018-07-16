@@ -99,7 +99,7 @@ type loop('action, 'state) = {
   start: self('action, 'state) => unit,
   dispatch: ('action, 'state) => update('state),
   getFromRoute: (routeAction, route) => update('state),
-  updateRoute: previousAndNextState('state) => routeUpdate,
+  updateRoute: previousAndNextState('state) => unit,
   render: self('action, 'state) => unit,
 };
 
@@ -107,7 +107,8 @@ let programStateWrapper: ('state, loop('action, 'state)) => unit =
   (initState, looper) => {
     let currentState = ref(initState);
 
-    let rec runner = action => {
+    let rec makeSelf = state => {send: runner, state}
+    and runner = action => {
       let update = looper.dispatch(action, currentState^);
       let nextState =
         switch (update) {
@@ -115,24 +116,11 @@ let programStateWrapper: ('state, loop('action, 'state)) => unit =
         | NoUpdate => currentState^
         };
 
-      let routeUpdate =
-        looper.updateRoute({previous: currentState^, next: nextState});
-      let _ =
-        switch (routeUpdate) {
-        | Push(route) =>
-          let url = Belt.List.reduce(route.path, "/", (++));
-          BsHistory.push(url, router);
-        | Replace(route) =>
-          let url = Belt.List.reduce(route.path, "/", (++));
-          BsHistory.replace(url, router);
-        | Pop => /* TODO: goBack */ ()
-        | NoTransition => ()
-        };
+      let _ = looper.updateRoute({previous: currentState^, next: nextState});
 
       currentState := nextState;
 
-      let self = {send: runner, state: nextState};
-      looper.render(self);
+      looper.render(makeSelf(nextState));
       ();
     };
 
@@ -160,15 +148,13 @@ let programStateWrapper: ('state, loop('action, 'state)) => unit =
             };
 
           currentState := nextState;
-          let self = {send: runner, state: nextState};
-          looper.render(self);
+          looper.render(makeSelf(nextState));
           ();
         },
         router,
       );
 
-    let self = {send: runner, state: currentState^};
-    looper.start(self);
+    looper.start(makeSelf(currentState^));
     ();
   };
 
@@ -199,7 +185,19 @@ let loop:
     updateRoute: prevAndNextState => {
       let update = toRoute(prevAndNextState);
 
-      update;
+      let _ =
+        switch (update) {
+        | Push(route) =>
+          let url = Belt.List.reduce(route.path, "/", (++));
+          BsHistory.push(url, router);
+        | Replace(route) =>
+          let url = Belt.List.reduce(route.path, "/", (++));
+          BsHistory.replace(url, router);
+        | Pop => /* TODO: goBack */ ()
+        | NoTransition => ()
+        };
+
+      ();
     },
     render: self => {
       let nextView = view(self);

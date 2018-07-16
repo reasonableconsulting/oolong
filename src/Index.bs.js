@@ -17,7 +17,6 @@ function app() {
   return /* record */[
           /* debug */program[/* debug */0],
           /* fromRoute */(function (routeAction, route) {
-              console.log(routeAction, route);
               if (routeAction !== 0) {
                 var match = route[/* path */0];
                 if (match && match[0] === "") {

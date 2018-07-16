@@ -11,8 +11,7 @@ let app = () => {
 
   {
     ...program,
-    fromRoute: (routeAction, route) => {
-      Js.log2(routeAction, route);
+    fromRoute: (routeAction, route) =>
       switch (routeAction) {
       | Init =>
         switch (route.path) {
@@ -26,8 +25,7 @@ let app = () => {
         | ["", counter] => Program.Update({counter: int_of_string(counter)})
         | _ => Program.NoUpdate
         }
-      };
-    },
+      },
     toRoute: ({previous, next}) => {
       Js.log2(previous, next);
       if (previous == next) {
