@@ -70,4 +70,6 @@ let app = () => {
 |}
 ];
 
-Program.startup(app(), view => ReactDOMRe.renderToElementWithId(view, "app"));
+Program.startup(~router=Router.hash(), app(), view =>
+  ReactDOMRe.renderToElementWithId(view, "app")
+);

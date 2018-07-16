@@ -8,7 +8,9 @@ var Caml_obj = require("bs-platform/lib/js/caml_obj.js");
 var Belt_Debug = require("bs-platform/lib/js/belt_Debug.js");
 var ReactDOMRe = require("reason-react/src/ReactDOMRe.js");
 var Caml_format = require("bs-platform/lib/js/caml_format.js");
+var Js_primitive = require("bs-platform/lib/js/js_primitive.js");
 var Route$ReasonTea = require("./Route.bs.js");
+var Router$ReasonTea = require("./Router.bs.js");
 var Program$ReasonTea = require("./Program.bs.js");
 
 Belt_Debug.setupChromeDebugger(/* () */0);
@@ -95,7 +97,7 @@ function app() {
   }()
 ));
 
-Program$ReasonTea.startup(app(/* () */0), (function (view) {
+Program$ReasonTea.startup(Js_primitive.some(Router$ReasonTea.hash(/* () */0)), app(/* () */0), (function (view) {
         return ReactDOMRe.renderToElementWithId(view, "app");
       }));
 

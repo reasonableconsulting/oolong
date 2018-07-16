@@ -29,21 +29,14 @@ and routeUpdate =
   | Pop
   | NoTransition
 and loop('action, 'state) = {
+  init: unit => 'state,
   start: self('action, 'state) => unit,
+  listen: ((BsHistory.Location.t, BsHistory.Action.t) => unit) => unit,
   dispatch: ('action, 'state) => update('state),
   getFromRoute: (routeAction, Route.t) => update('state),
   updateRoute: previousAndNextState('state) => unit,
   render: self('action, 'state) => unit,
 };
-
-let historyOpts =
-  BsHistory.makeHashHistoryOptions(
-    ~basename="",
-    /* ~initialEntries=[|"/"|],
-       ~initialIndex=0,
-       ~keyLength=6, */
-  );
-let router = BsHistory.createHashHistory(historyOpts);
 
 let getRoute = location =>
   Route.make(
@@ -98,35 +91,31 @@ let programStateWrapper: ('state, loop('action, 'state)) => unit =
       ();
     };
 
-    let unlisten =
-      BsHistory.listen(
-        (location, action) => {
-          let routeAction =
-            switch (action) {
-            | `Push =>
-              Js.log("listener: push");
-              Push;
-            | `Pop =>
-              Js.log("listener: pop");
-              Pop;
-            | `Replace =>
-              Js.log("listener: replace");
-              Replace;
-            };
+    looper.listen((location, action) => {
+      let routeAction =
+        switch (action) {
+        | `Push =>
+          Js.log("listener: push");
+          Push;
+        | `Pop =>
+          Js.log("listener: pop");
+          Pop;
+        | `Replace =>
+          Js.log("listener: replace");
+          Replace;
+        };
 
-          let update = looper.getFromRoute(routeAction, getRoute(location));
-          let nextState =
-            switch (update) {
-            | Update(nextState) => nextState
-            | NoUpdate => currentState^
-            };
+      let update = looper.getFromRoute(routeAction, getRoute(location));
+      let nextState =
+        switch (update) {
+        | Update(nextState) => nextState
+        | NoUpdate => currentState^
+        };
 
-          currentState := nextState;
-          looper.render(makeSelf(nextState));
-          ();
-        },
-        router,
-      );
+      currentState := nextState;
+      looper.render(makeSelf(nextState));
+      ();
+    });
 
     looper.start(makeSelf(currentState^));
     ();
@@ -134,6 +123,7 @@ let programStateWrapper: ('state, loop('action, 'state)) => unit =
 
 let loop:
   (
+    ~router: Router.t,
     ~update: ('action, 'state) => update('state),
     ~view: self('action, 'state) => 'view,
     ~toRoute: previousAndNextState('state) => routeUpdate,
@@ -141,70 +131,87 @@ let loop:
     ~enqueueRender: 'view => unit
   ) =>
   loop('action, 'state) =
-  (~update, ~view, ~toRoute, ~fromRoute, ~enqueueRender) => {
-    start: self => {
-      let initView = view(self);
-      enqueueRender(initView);
-    },
-    dispatch: (action, state) => {
-      let nextState = update(action, state);
+  (~router, ~update, ~view, ~toRoute, ~fromRoute, ~enqueueRender) => {
+    let _ = ();
 
-      nextState;
-    },
-    getFromRoute: (action, route) => {
-      let next = fromRoute(action, route);
+    {
+      init: _ => {
+        let location = Router.getCurrent(router);
+        let initState =
+          switch (fromRoute(Init, getRoute(location))) {
+          | Update(state) => state
+          /* | UpdateWithSideEffects(state, effect) => (state, Some(effect)) */
+          | NoUpdate => failwith("Must init a state")
+          /* | SideEffects(_effect) => failwith("Must init a state") */
+          };
 
-      next;
-    },
-    updateRoute: prevAndNextState => {
-      let update = toRoute(prevAndNextState);
+        /* TOOD: DevMode only */
+        let _ =
+          switch (toRoute({previous: initState, next: initState})) {
+          | NoTransition => ()
+          | _ =>
+            failwith(
+              "toRoute should result in no transition when called with initial state.",
+            )
+          };
 
-      let _ =
-        switch (update) {
-        | Push(route) => BsHistory.push(Route.toUrl(route), router)
-        | Replace(route) => BsHistory.replace(Route.toUrl(route), router)
-        | Pop => /* TODO: goBack */ ()
-        | NoTransition => ()
-        };
+        initState;
+      },
+      listen: callback => {
+        let unlisten = BsHistory.listen(callback, router);
+        ();
+      },
+      start: self => {
+        let initView = view(self);
+        enqueueRender(initView);
+      },
+      dispatch: (action, state) => {
+        let nextState = update(action, state);
 
-      ();
-    },
-    render: self => {
-      let nextView = view(self);
+        nextState;
+      },
+      getFromRoute: (action, route) => {
+        let next = fromRoute(action, route);
 
-      enqueueRender(nextView);
-    },
+        next;
+      },
+      updateRoute: prevAndNextState => {
+        let update = toRoute(prevAndNextState);
+
+        let _ =
+          switch (update) {
+          | Push(route) => BsHistory.push(Route.toUrl(route), router)
+          | Replace(route) => BsHistory.replace(Route.toUrl(route), router)
+          | Pop => /* TODO: goBack */ ()
+          | NoTransition => ()
+          };
+
+        ();
+      },
+      render: self => {
+        let nextView = view(self);
+
+        enqueueRender(nextView);
+      },
+    };
   };
 
-let startup: (t('action, 'state, 'view), 'view => unit) => unit =
-  (program, renderer) => {
-    let location = BsHistory.location(router);
-    let initState =
-      switch (program.fromRoute(Init, getRoute(location))) {
-      | Update(state) => state
-      /* | UpdateWithSideEffects(state, effect) => (state, Some(effect)) */
-      | NoUpdate => failwith("Must init a state")
-      /* | SideEffects(_effect) => failwith("Must init a state") */
-      };
+let defaultRouter = Router.memory();
 
-    /* TOOD: DevMode only */
-    let _ =
-      switch (program.toRoute({previous: initState, next: initState})) {
-      | NoTransition => ()
-      | _ =>
-        failwith(
-          "toRoute should result in no transition when called with initial state.",
-        )
-      };
-
+let startup:
+  (~router: Router.t=?, t('action, 'state, 'view), 'view => unit) => unit =
+  (~router=defaultRouter, program, renderer) => {
     let looper =
       loop(
+        ~router,
         ~update=program.update,
         ~view=program.view,
         ~toRoute=program.toRoute,
         ~fromRoute=program.fromRoute,
         ~enqueueRender=renderer,
       );
+
+    let initState = looper.init();
 
     let _ = programStateWrapper(initState, looper);
     ();

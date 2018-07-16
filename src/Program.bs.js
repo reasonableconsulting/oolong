@@ -4,14 +4,9 @@
 var Curry = require("bs-platform/lib/js/curry.js");
 var BsHistory = require("bs-history/src/BsHistory.bs.js");
 var Pervasives = require("bs-platform/lib/js/pervasives.js");
+var Js_primitive = require("bs-platform/lib/js/js_primitive.js");
 var Route$ReasonTea = require("./Route.bs.js");
-var CreateHashHistory = require("history/createHashHistory");
-
-var historyOpts = {
-  basename: ""
-};
-
-var router = CreateHashHistory.default(historyOpts);
+var Router$ReasonTea = require("./Router.bs.js");
 
 function getRoute($$location) {
   return Route$ReasonTea.make(Route$ReasonTea.path($$location), Route$ReasonTea.hash($$location), Route$ReasonTea.search($$location));
@@ -51,43 +46,62 @@ function program(debug) {
 function programStateWrapper(initState, looper) {
   var currentState = /* record */[/* contents */initState];
   var runner = function (action) {
-    var update = Curry._2(looper[/* dispatch */1], action, currentState[0]);
+    var update = Curry._2(looper[/* dispatch */3], action, currentState[0]);
     var nextState = update ? update[0] : currentState[0];
-    Curry._1(looper[/* updateRoute */3], /* record */[
+    Curry._1(looper[/* updateRoute */5], /* record */[
           /* previous */currentState[0],
           /* next */nextState
         ]);
     currentState[0] = nextState;
-    Curry._1(looper[/* render */4], /* record */[
+    Curry._1(looper[/* render */6], /* record */[
           /* state */nextState,
           /* send */runner
         ]);
     return /* () */0;
   };
-  BsHistory.listen((function ($$location, action) {
-            var routeAction = action !== 4003185 ? (
-                action >= 893009402 ? (console.log("listener: push"), /* Push */1) : (console.log("listener: replace"), /* Replace */3)
-              ) : (console.log("listener: pop"), /* Pop */2);
-            var update = Curry._2(looper[/* getFromRoute */2], routeAction, getRoute($$location));
-            var nextState = update ? update[0] : currentState[0];
-            currentState[0] = nextState;
-            Curry._1(looper[/* render */4], /* record */[
-                  /* state */nextState,
-                  /* send */runner
-                ]);
-            return /* () */0;
-          }))(router);
-  Curry._1(looper[/* start */0], /* record */[
+  Curry._1(looper[/* listen */2], (function ($$location, action) {
+          var routeAction = action !== 4003185 ? (
+              action >= 893009402 ? (console.log("listener: push"), /* Push */1) : (console.log("listener: replace"), /* Replace */3)
+            ) : (console.log("listener: pop"), /* Pop */2);
+          var update = Curry._2(looper[/* getFromRoute */4], routeAction, getRoute($$location));
+          var nextState = update ? update[0] : currentState[0];
+          currentState[0] = nextState;
+          Curry._1(looper[/* render */6], /* record */[
+                /* state */nextState,
+                /* send */runner
+              ]);
+          return /* () */0;
+        }));
+  Curry._1(looper[/* start */1], /* record */[
         /* state */currentState[0],
         /* send */runner
       ]);
   return /* () */0;
 }
 
-function loop(update, view, toRoute, fromRoute, enqueueRender) {
+function loop(router, update, view, toRoute, fromRoute, enqueueRender) {
   return /* record */[
+          /* init */(function () {
+              var $$location = Router$ReasonTea.getCurrent(router);
+              var match = Curry._2(fromRoute, /* Init */0, getRoute($$location));
+              var initState = match ? match[0] : Pervasives.failwith("Must init a state");
+              var match$1 = Curry._1(toRoute, /* record */[
+                    /* previous */initState,
+                    /* next */initState
+                  ]);
+              if (typeof match$1 === "number" && match$1 !== 0) {
+                
+              } else {
+                Pervasives.failwith("toRoute should result in no transition when called with initial state.");
+              }
+              return initState;
+            }),
           /* start */(function (self) {
               return Curry._1(enqueueRender, Curry._1(view, self));
+            }),
+          /* listen */(function (callback) {
+              BsHistory.listen(callback)(router);
+              return /* () */0;
             }),
           /* dispatch */Curry.__2(update),
           /* getFromRoute */Curry.__2(fromRoute),
@@ -108,28 +122,18 @@ function loop(update, view, toRoute, fromRoute, enqueueRender) {
         ];
 }
 
-function startup(program, renderer) {
-  var $$location = router.location;
-  var match = Curry._2(program[/* fromRoute */1], /* Init */0, getRoute($$location));
-  var initState = match ? match[0] : Pervasives.failwith("Must init a state");
-  var match$1 = Curry._1(program[/* toRoute */2], /* record */[
-        /* previous */initState,
-        /* next */initState
-      ]);
-  if (typeof match$1 === "number" && match$1 !== 0) {
-    
-  } else {
-    Pervasives.failwith("toRoute should result in no transition when called with initial state.");
-  }
-  var looper = loop(program[/* update */3], program[/* view */4], program[/* toRoute */2], program[/* fromRoute */1], renderer);
+var defaultRouter = Router$ReasonTea.memory(/* () */0);
+
+function startup($staropt$star, program, renderer) {
+  var router = $staropt$star !== undefined ? Js_primitive.valFromOption($staropt$star) : defaultRouter;
+  var looper = loop(router, program[/* update */3], program[/* view */4], program[/* toRoute */2], program[/* fromRoute */1], renderer);
+  var initState = Curry._1(looper[/* init */0], /* () */0);
   programStateWrapper(initState, looper);
   return /* () */0;
 }
 
 var routerProgram = program;
 
-exports.historyOpts = historyOpts;
-exports.router = router;
 exports.getRoute = getRoute;
 exports.defaultRoute = defaultRoute;
 exports.fromRouteDefault = fromRouteDefault;
@@ -139,6 +143,7 @@ exports.viewDefault = viewDefault;
 exports.program = program;
 exports.programStateWrapper = programStateWrapper;
 exports.loop = loop;
+exports.defaultRouter = defaultRouter;
 exports.startup = startup;
 exports.routerProgram = routerProgram;
-/* router Not a pure module */
+/* defaultRoute Not a pure module */
