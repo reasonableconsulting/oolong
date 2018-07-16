@@ -1,9 +1,9 @@
-type t('action, 'state) = {
+type t('action, 'state, 'view) = {
   debug: string,
   fromRoute: (routeAction, route) => update('state),
   toRoute: previousAndNextState('state) => routeUpdate,
   update: ('action, 'state) => update('state),
-  view: self('action, 'state) => ReasonReact.reactElement,
+  view: self('action, 'state) => 'view,
 }
 and route = {
   path: list(string),
@@ -80,10 +80,10 @@ let toRouteDefault: previousAndNextState('state) => routeUpdate =
 let updateDefault: ('action, 'state) => update('state) =
   (_action, _state) => NoUpdate;
 
-let viewDefault: 'state => ReasonReact.reactElement =
-  _self => ReasonReact.string("View not implemeneted");
+let viewDefault: 'state => 'view =
+  _self => failwith("Must assign a view method");
 
-let program: string => t('action, 'state) =
+let program: string => t('action, 'state, 'view) =
   debug => {
     let template = {
       debug,
@@ -161,10 +161,10 @@ let programStateWrapper: ('state, loop('action, 'state)) => unit =
 let loop:
   (
     ~update: ('action, 'state) => update('state),
-    ~view: self('action, 'state) => ReasonReact.reactElement,
+    ~view: self('action, 'state) => 'view,
     ~toRoute: previousAndNextState('state) => routeUpdate,
     ~fromRoute: (routeAction, route) => update('state),
-    ~enqueueRender: ReasonReact.reactElement => unit
+    ~enqueueRender: 'view => unit
   ) =>
   loop('action, 'state) =
   (~update, ~view, ~toRoute, ~fromRoute, ~enqueueRender) => {
@@ -206,7 +206,7 @@ let loop:
     },
   };
 
-let startup: (t('action, 'state), ReasonReact.reactElement => unit) => unit =
+let startup: (t('action, 'state, 'view), 'view => unit) => unit =
   (program, renderer) => {
     let location = BsHistory.location(router);
     let initState =
@@ -240,4 +240,5 @@ let startup: (t('action, 'state), ReasonReact.reactElement => unit) => unit =
     ();
   };
 
-let routerProgram: string => t('action, 'state) = debug => program(debug);
+let routerProgram: string => t('action, 'state, 'view) =
+  debug => program(debug);

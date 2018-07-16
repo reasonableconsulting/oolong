@@ -59,7 +59,7 @@ function updateDefault(_, _$1) {
 }
 
 function viewDefault() {
-  return "View not implemeneted";
+  return Pervasives.failwith("Must assign a view method");
 }
 
 function program(debug) {
