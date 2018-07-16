@@ -6,10 +6,10 @@ let program = Program.routerProgram("CounterApp");
 
 let app = () => {
   ...program,
-  fromRoute: transition => {
-    Js.log(transition);
-    switch (transition) {
-    | Init(route) =>
+  fromRoute: (routeAction, route) => {
+    Js.log(routeAction);
+    switch (routeAction) {
+    | Init =>
       Js.log(route.path);
       switch (route.path) {
       | ["", counter] => Program.Update({counter: int_of_string(counter)})
@@ -18,15 +18,19 @@ let app = () => {
     | _ => Program.NoUpdate
     };
   },
-  /* toRoute: state => {
-       Js.log(state);
-       Program.Push(
-         Program.makeRoute(
-           ~path=["", string_of_int(state.counter)],
-           ~search="",
-           ~hash="",
-         ),
-       );
+  /* toRoute: ({previous, next}) => {
+       Js.log2(previous, next);
+       if (previous == next) {
+         Program.NoTransition;
+       } else {
+         Program.Push(
+           Program.makeRoute(
+             ~path=["", string_of_int(next.counter)],
+             ~search="",
+             ~hash="",
+           ),
+         );
+       };
      }, */
   update: state => Program.Update({counter: state.counter + 1}),
   view: self =>

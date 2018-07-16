@@ -6,21 +6,20 @@ var React = require("react");
 var Belt_Debug = require("bs-platform/lib/js/belt_Debug.js");
 var ReactDOMRe = require("reason-react/src/ReactDOMRe.js");
 var Caml_format = require("bs-platform/lib/js/caml_format.js");
-var Program$ReactLite = require("./Program.bs.js");
+var Program$ReasonTea = require("./Program.bs.js");
 
 Belt_Debug.setupChromeDebugger(/* () */0);
 
-var program = Program$ReactLite.routerProgram("CounterApp");
+var program = Program$ReasonTea.routerProgram("CounterApp");
 
 function app() {
   return /* record */[
           /* debug */program[/* debug */0],
-          /* fromRoute */(function (transition) {
-              console.log(transition);
-              if (typeof transition === "number" || transition.tag) {
+          /* fromRoute */(function (routeAction, route) {
+              console.log(routeAction);
+              if (routeAction !== 0) {
                 return /* NoUpdate */0;
               } else {
-                var route = transition[0];
                 console.log(route[/* path */0]);
                 var match = route[/* path */0];
                 if (match && match[0] === "") {
@@ -57,7 +56,7 @@ function app() {
   }()
 ));
 
-Program$ReactLite.startup(app(/* () */0), (function (view) {
+Program$ReasonTea.startup(app(/* () */0), (function (view) {
         return ReactDOMRe.renderToElementWithId(view, "app");
       }));
 

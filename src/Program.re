@@ -1,7 +1,7 @@
 type t('state) = {
   debug: string,
-  fromRoute: routeTransition => update('state),
-  toRoute: 'state => routeTransition,
+  fromRoute: (routeAction, route) => update('state),
+  toRoute: previousAndNextState('state) => routeUpdate,
   update: 'state => update('state),
   view: self('state) => ReasonReact.reactElement,
 }
@@ -10,21 +10,29 @@ and route = {
   hash: string,
   search: string,
 }
-and routeTransition =
-  | Init(route)
-  | Push(route)
-  | Pop(route)
-  | Replace(route)
-  | NoTransition
+and routeAction =
+  | Init
+  | Push
+  | Pop
+  | Replace
 and self('state) = {
   state: 'state,
   send: unit => unit,
+}
+and previousAndNextState('state) = {
+  previous: 'state,
+  next: 'state,
 }
 and update('state) =
   | Update('state)
   /* | SideEffects(self('state, 'action) => unit) */
   /* | UpdateWithSideEffects('state, self('state, 'action) => unit) */
-  | NoUpdate;
+  | NoUpdate
+and routeUpdate =
+  | Push(route)
+  | Replace(route)
+  | Pop
+  | NoTransition;
 
 let historyOpts =
   BsHistory.makeHashHistoryOptions(
@@ -59,9 +67,10 @@ let hash = location => {
 let makeRoute = (~path, ~hash, ~search) => {path, hash, search};
 let defaultRoute = {path: [""], hash: "", search: ""};
 
-let fromRouteDefault: routeTransition => update('state) = _route => NoUpdate;
-let toRouteDefault: 'state => routeTransition =
-  _state => {
+let fromRouteDefault: (routeAction, route) => update('state) =
+  (_action, _route) => NoUpdate;
+let toRouteDefault: previousAndNextState('state) => routeUpdate =
+  _prevAndNext => {
     Js.log("toRoute default");
     NoTransition;
   };
@@ -86,8 +95,8 @@ let program: string => t('state) =
 type loop('state) = {
   start: self('state) => unit,
   dispatch: 'state => update('state),
-  getFromRoute: routeTransition => update('state),
-  updateRoute: 'state => routeTransition,
+  getFromRoute: (routeAction, route) => update('state),
+  updateRoute: previousAndNextState('state) => routeUpdate,
   render: self('state) => unit,
 };
 
@@ -103,9 +112,10 @@ let programStateWrapper: ('state, loop('state)) => unit =
         | NoUpdate => currentState^
         };
 
-      let transition = looper.updateRoute(nextState);
+      let routeUpdate =
+        looper.updateRoute({previous: currentState^, next: nextState});
       let _ =
-        switch (transition) {
+        switch (routeUpdate) {
         | Push(route) =>
           let url = Belt.List.reduce(route.path, "/", (++));
           Js.log(url);
@@ -114,9 +124,11 @@ let programStateWrapper: ('state, loop('state)) => unit =
           let url = Belt.List.reduce(route.path, "/", (++));
           Js.log(url);
           BsHistory.replace(url, router);
-        | Init(_route) => ()
+        | Pop => /* TODO: goBack */ ()
         | NoTransition => ()
         };
+
+      currentState := nextState;
 
       let self = {send: runner, state: nextState};
       looper.render(self);
@@ -133,15 +145,15 @@ let programStateWrapper: ('state, loop('state)) => unit =
             hash: hash(location),
           };
 
-          let transition =
+          let routeAction =
             switch (action) {
-            | `Push => Push(route())
-            | `Pop => Pop(route())
-            | `Replace => Replace(route())
+            | `Push => Push
+            | `Pop => Pop
+            | `Replace => Replace
             };
           Js.log("listener");
 
-          let _ = looper.getFromRoute(transition);
+          let _ = looper.getFromRoute(routeAction, route());
           ();
         },
         router,
@@ -156,8 +168,8 @@ let loop:
   (
     ~update: 'state => update('state),
     ~view: self('state) => ReasonReact.reactElement,
-    ~toRoute: 'state => routeTransition,
-    ~fromRoute: routeTransition => update('state),
+    ~toRoute: previousAndNextState('state) => routeUpdate,
+    ~fromRoute: (routeAction, route) => update('state),
     ~enqueueRender: ReasonReact.reactElement => unit
   ) =>
   loop('state) =
@@ -171,15 +183,15 @@ let loop:
 
       nextState;
     },
-    getFromRoute: transition => {
-      let next = fromRoute(transition);
+    getFromRoute: (action, route) => {
+      let next = fromRoute(action, route);
 
       next;
     },
-    updateRoute: state => {
-      let transition = toRoute(state);
+    updateRoute: prevAndNextState => {
+      let update = toRoute(prevAndNextState);
 
-      transition;
+      update;
     },
     render: self => {
       let nextView = view(self);
@@ -188,44 +200,45 @@ let loop:
     },
   };
 
-let startup = (program, renderer) => {
-  let initRoute = () => {
-    let location = BsHistory.location(router);
-    Init({
-      path: path(location),
-      search: search(location),
-      hash: hash(location),
-    });
+let startup: (t('state), ReasonReact.reactElement => unit) => unit =
+  (program, renderer) => {
+    let initRoute = () => {
+      let location = BsHistory.location(router);
+      {
+        path: path(location),
+        search: search(location),
+        hash: hash(location),
+      };
+    };
+
+    let initState =
+      switch (program.fromRoute(Init, initRoute())) {
+      | Update(state) => state
+      /* | UpdateWithSideEffects(state, effect) => (state, Some(effect)) */
+      | NoUpdate => failwith("Must init a state")
+      /* | SideEffects(_effect) => failwith("Must init a state") */
+      };
+
+    /* let result =
+       switch (program.toRoute({previous: initState, next: initState})) {
+       | NoTransition => None
+       | _ =>
+         Some(
+           "toRoute should result in no transition when called with initial state.",
+         )
+       }; */
+
+    let looper =
+      loop(
+        ~update=program.update,
+        ~view=program.view,
+        ~toRoute=program.toRoute,
+        ~fromRoute=program.fromRoute,
+        ~enqueueRender=renderer,
+      );
+
+    let _ = programStateWrapper(initState, looper);
+    ();
   };
-
-  let initState =
-    switch (program.fromRoute(initRoute())) {
-    | Update(state) => state
-    /* | UpdateWithSideEffects(state, effect) => (state, Some(effect)) */
-    | NoUpdate => failwith("Must init a state")
-    /* | SideEffects(_effect) => failwith("Must init a state") */
-    };
-
-  let _ =
-    switch (program.toRoute(initState)) {
-    | NoTransition => ()
-    | _ =>
-      failwith(
-        "toRoute should result in no transition when called with initial state.",
-      )
-    };
-
-  let looper =
-    loop(
-      ~update=program.update,
-      ~view=program.view,
-      ~toRoute=program.toRoute,
-      ~fromRoute=program.fromRoute,
-      ~enqueueRender=renderer,
-    );
-
-  let _ = programStateWrapper(initState, looper);
-  ();
-};
 
 let routerProgram: string => t('state) = debug => program(debug);
