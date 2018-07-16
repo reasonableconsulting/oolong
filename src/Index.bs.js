@@ -45,9 +45,7 @@ function app() {
             }),
           /* toRoute */(function (param) {
               var next = param[/* next */1];
-              var previous = param[/* previous */0];
-              console.log(previous, next);
-              if (Caml_obj.caml_equal(previous, next)) {
+              if (Caml_obj.caml_equal(param[/* previous */0], next)) {
                 return /* NoTransition */1;
               } else {
                 return /* Push */Block.__(0, [Program$ReasonTea.makeRoute(/* :: */[
@@ -99,8 +97,6 @@ function app() {
 Program$ReasonTea.startup(app(/* () */0), (function (view) {
         return ReactDOMRe.renderToElementWithId(view, "app");
       }));
-
-console.log("started");
 
 exports.app = app;
 /*  Not a pure module */

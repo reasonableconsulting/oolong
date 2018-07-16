@@ -26,8 +26,7 @@ let app = () => {
         | _ => Program.NoUpdate
         }
       },
-    toRoute: ({previous, next}) => {
-      Js.log2(previous, next);
+    toRoute: ({previous, next}) =>
       if (previous == next) {
         Program.NoTransition;
       } else {
@@ -38,8 +37,7 @@ let app = () => {
             ~hash="",
           ),
         );
-      };
-    },
+      },
     update: (action, state) =>
       switch (action) {
       | Increment => Program.Update({counter: state.counter + 1})
@@ -73,7 +71,3 @@ let app = () => {
 ];
 
 Program.startup(app(), view => ReactDOMRe.renderToElementWithId(view, "app"));
-
-Js.log("started");
-
-/* BsHistory.push("12", Program.router); */
