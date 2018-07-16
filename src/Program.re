@@ -147,13 +147,28 @@ let programStateWrapper: ('state, loop('state)) => unit =
 
           let routeAction =
             switch (action) {
-            | `Push => Push
-            | `Pop => Pop
-            | `Replace => Replace
+            | `Push =>
+              Js.log("push");
+              Push;
+            | `Pop =>
+              Js.log("pop");
+              Pop;
+            | `Replace =>
+              Js.log("replace");
+              Replace;
             };
           Js.log("listener");
 
-          let _ = looper.getFromRoute(routeAction, route());
+          let update = looper.getFromRoute(routeAction, route());
+          let nextState =
+            switch (update) {
+            | Update(nextState) => nextState
+            | NoUpdate => currentState^
+            };
+
+          currentState := nextState;
+          let self = {send: runner, state: nextState};
+          looper.render(self);
           ();
         },
         router,
@@ -218,6 +233,8 @@ let startup: (t('state), ReasonReact.reactElement => unit) => unit =
       | NoUpdate => failwith("Must init a state")
       /* | SideEffects(_effect) => failwith("Must init a state") */
       };
+
+    /* let routeUpdate = program.toRoute({previous: initState, next: initState}); */
 
     /* let result =
        switch (program.toRoute({previous: initState, next: initState})) {

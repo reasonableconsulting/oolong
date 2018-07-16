@@ -107,10 +107,17 @@ function programStateWrapper(initState, looper) {
                     ];
             };
             var routeAction = action !== 4003185 ? (
-                action >= 893009402 ? /* Push */1 : /* Replace */3
-              ) : /* Pop */2;
+                action >= 893009402 ? (console.log("push"), /* Push */1) : (console.log("replace"), /* Replace */3)
+              ) : (console.log("pop"), /* Pop */2);
             console.log("listener");
-            Curry._2(looper[/* getFromRoute */2], routeAction, route(/* () */0));
+            var update = Curry._2(looper[/* getFromRoute */2], routeAction, route(/* () */0));
+            var nextState = update ? update[0] : currentState[0];
+            currentState[0] = nextState;
+            var self = /* record */[
+              /* state */nextState,
+              /* send */runner
+            ];
+            Curry._1(looper[/* render */4], self);
             return /* () */0;
           }))(router);
   var self_000 = /* state */currentState[0];
