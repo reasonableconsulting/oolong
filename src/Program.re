@@ -161,12 +161,8 @@ let loop:
 
       let _ =
         switch (update) {
-        | Push(route) =>
-          let url = Belt.List.reduce(route.path, "/", (++));
-          BsHistory.push(url, router);
-        | Replace(route) =>
-          let url = Belt.List.reduce(route.path, "/", (++));
-          BsHistory.replace(url, router);
+        | Push(route) => BsHistory.push(Route.toUrl(route), router)
+        | Replace(route) => BsHistory.replace(Route.toUrl(route), router)
         | Pop => /* TODO: goBack */ ()
         | NoTransition => ()
         };

@@ -25,3 +25,6 @@ let hash = location => {
 };
 
 let make = (~path, ~hash, ~search) => {path, hash, search};
+
+/* TODO: Handle making a url better */
+let toUrl = route => Belt.List.reduce(route.path, "/", (++));

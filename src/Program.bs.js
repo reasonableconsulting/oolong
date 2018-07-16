@@ -2,7 +2,6 @@
 'use strict';
 
 var Curry = require("bs-platform/lib/js/curry.js");
-var Belt_List = require("bs-platform/lib/js/belt_List.js");
 var BsHistory = require("bs-history/src/BsHistory.bs.js");
 var Pervasives = require("bs-platform/lib/js/pervasives.js");
 var Route$ReasonTea = require("./Route.bs.js");
@@ -97,15 +96,9 @@ function loop(update, view, toRoute, fromRoute, enqueueRender) {
               if (typeof update === "number") {
                 update === 0;
               } else if (update.tag) {
-                var url = Belt_List.reduce(update[0][/* path */0], "/", (function (prim, prim$1) {
-                        return prim + prim$1;
-                      }));
-                router.replace(url);
+                router.replace(Route$ReasonTea.toUrl(update[0]));
               } else {
-                var url$1 = Belt_List.reduce(update[0][/* path */0], "/", (function (prim, prim$1) {
-                        return prim + prim$1;
-                      }));
-                router.push(url$1);
+                router.push(Route$ReasonTea.toUrl(update[0]));
               }
               return /* () */0;
             }),

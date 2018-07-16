@@ -28,8 +28,15 @@ function make(path, hash, search) {
         ];
 }
 
+function toUrl(route) {
+  return Belt_List.reduce(route[/* path */0], "/", (function (prim, prim$1) {
+                return prim + prim$1;
+              }));
+}
+
 exports.path = path;
 exports.search = search;
 exports.hash = hash;
 exports.make = make;
+exports.toUrl = toUrl;
 /* No side effect */
