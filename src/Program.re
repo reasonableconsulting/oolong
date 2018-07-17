@@ -1,8 +1,8 @@
 type t('action, 'state, 'view) = {
   debug: string,
-  fromRoute: (Router.Action.t, Route.t) => update('state),
+  fromRoute: (Router.Action.t, Route.t) => update('action, 'state),
   toRoute: previousAndNextState('state) => routeUpdate,
-  update: ('action, 'state) => update('state),
+  update: ('action, 'state) => update('action, 'state),
   view: self('action, 'state) => 'view,
 }
 and self('action, 'state) = {
@@ -13,10 +13,10 @@ and previousAndNextState('state) = {
   previous: 'state,
   next: 'state,
 }
-and update('state) =
+and update('action, 'state) =
   | Update('state)
   /* | SideEffects(self('state, 'action) => unit) */
-  /* | UpdateWithSideEffects('state, self('state, 'action) => unit) */
+  | UpdateWithSideEffects('state, self('action, 'state) => unit)
   | NoUpdate
 and routeUpdate =
   | Push(Route.t)
@@ -27,8 +27,8 @@ and loop('action, 'state) = {
   init: unit => 'state,
   start: self('action, 'state) => unit,
   listen: ((BsHistory.Location.t, Router.Action.t) => unit) => unit,
-  dispatch: ('action, 'state) => update('state),
-  getFromRoute: (Router.Action.t, Route.t) => update('state),
+  dispatch: ('action, 'state) => update('action, 'state),
+  getFromRoute: (Router.Action.t, Route.t) => update('action, 'state),
   updateRoute: previousAndNextState('state) => unit,
   render: self('action, 'state) => unit,
 };
@@ -42,12 +42,12 @@ let getRoute = location =>
 
 let defaultRoute = Route.make(~path=[""], ~hash="", ~search="");
 
-let fromRouteDefault: (Router.Action.t, Route.t) => update('state) =
+let fromRouteDefault: (Router.Action.t, Route.t) => update('action, 'state) =
   (_action, _route) => NoUpdate;
 let toRouteDefault: previousAndNextState('state) => routeUpdate =
   _prevAndNext => NoTransition;
 
-let updateDefault: ('action, 'state) => update('state) =
+let updateDefault: ('action, 'state) => update('action, 'state) =
   (_action, _state) => NoUpdate;
 
 let viewDefault: 'state => 'view =
@@ -74,6 +74,9 @@ let programStateWrapper: ('state, loop('action, 'state)) => unit =
       let update = looper.dispatch(action, currentState^);
       let nextState =
         switch (update) {
+        | UpdateWithSideEffects(nextState, sideEffect) =>
+          sideEffect(makeSelf(nextState));
+          nextState;
         | Update(nextState) => nextState
         | NoUpdate => currentState^
         };
@@ -91,6 +94,9 @@ let programStateWrapper: ('state, loop('action, 'state)) => unit =
       let update = looper.getFromRoute(action, getRoute(location));
       let nextState =
         switch (update) {
+        | UpdateWithSideEffects(nextState, sideEffect) =>
+          sideEffect(makeSelf(nextState));
+          nextState;
         | Update(nextState) => nextState
         | NoUpdate => currentState^
         };
@@ -107,10 +113,10 @@ let programStateWrapper: ('state, loop('action, 'state)) => unit =
 let loop:
   (
     ~router: Router.t,
-    ~update: ('action, 'state) => update('state),
+    ~update: ('action, 'state) => update('action, 'state),
     ~view: self('action, 'state) => 'view,
     ~toRoute: previousAndNextState('state) => routeUpdate,
-    ~fromRoute: (Router.Action.t, Route.t) => update('state),
+    ~fromRoute: (Router.Action.t, Route.t) => update('action, 'state),
     ~enqueueRender: 'view => unit
   ) =>
   loop('action, 'state) =
@@ -123,7 +129,10 @@ let loop:
         let initState =
           switch (fromRoute(Init, getRoute(location))) {
           | Update(state) => state
-          /* | UpdateWithSideEffects(state, effect) => (state, Some(effect)) */
+          /* TODO: This needs access to the makeSelf/runner */
+          /* | UpdateWithSideEffects(nextState, sideEffect) =>
+             sideEffect(makeSelf(nextState));
+             nextState; */
           | NoUpdate => failwith("Must init a state")
           /* | SideEffects(_effect) => failwith("Must init a state") */
           };

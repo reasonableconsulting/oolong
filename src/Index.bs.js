@@ -25,7 +25,7 @@ function app() {
                 if (match && match[0] === "") {
                   var match$1 = match[1];
                   if (match$1 && !match$1[1]) {
-                    return /* Update */[/* record */[/* counter */Caml_format.caml_int_of_string(match$1[0])]];
+                    return /* Update */Block.__(0, [/* record */[/* counter */Caml_format.caml_int_of_string(match$1[0])]]);
                   } else {
                     return /* NoUpdate */0;
                   }
@@ -37,12 +37,12 @@ function app() {
                 if (match$2 && match$2[0] === "") {
                   var match$3 = match$2[1];
                   if (match$3 && !match$3[1]) {
-                    return /* Update */[/* record */[/* counter */Caml_format.caml_int_of_string(match$3[0])]];
+                    return /* Update */Block.__(0, [/* record */[/* counter */Caml_format.caml_int_of_string(match$3[0])]]);
                   } else {
-                    return /* Update */[/* record */[/* counter */0]];
+                    return /* Update */Block.__(0, [/* record */[/* counter */0]]);
                   }
                 } else {
-                  return /* Update */[/* record */[/* counter */0]];
+                  return /* Update */Block.__(0, [/* record */[/* counter */0]]);
                 }
               }
             }),
@@ -63,9 +63,9 @@ function app() {
           /* update */(function (action, state) {
               switch (action) {
                 case 0 : 
-                    return /* Update */[/* record */[/* counter */state[/* counter */0] + 1 | 0]];
+                    return /* Update */Block.__(0, [/* record */[/* counter */state[/* counter */0] + 1 | 0]]);
                 case 1 : 
-                    return /* Update */[/* record */[/* counter */state[/* counter */0] - 1 | 0]];
+                    return /* Update */Block.__(0, [/* record */[/* counter */state[/* counter */0] - 1 | 0]]);
                 case 2 : 
                     return /* NoUpdate */0;
                 

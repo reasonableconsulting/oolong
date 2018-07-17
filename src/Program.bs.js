@@ -6,6 +6,7 @@ var Pervasives = require("bs-platform/lib/js/pervasives.js");
 var Js_primitive = require("bs-platform/lib/js/js_primitive.js");
 var Route$ReasonTea = require("./Route.bs.js");
 var Router$ReasonTea = require("./Router.bs.js");
+var Caml_builtin_exceptions = require("bs-platform/lib/js/caml_builtin_exceptions.js");
 
 function getRoute($$location) {
   return Route$ReasonTea.make(Route$ReasonTea.path($$location), Route$ReasonTea.hash($$location), Route$ReasonTea.search($$location));
@@ -46,7 +47,19 @@ function programStateWrapper(initState, looper) {
   var currentState = /* record */[/* contents */initState];
   var runner = function (action) {
     var update = Curry._2(looper[/* dispatch */3], action, currentState[0]);
-    var nextState = update ? update[0] : currentState[0];
+    var nextState;
+    if (typeof update === "number") {
+      nextState = currentState[0];
+    } else if (update.tag) {
+      var nextState$1 = update[0];
+      Curry._1(update[1], /* record */[
+            /* state */nextState$1,
+            /* send */runner
+          ]);
+      nextState = nextState$1;
+    } else {
+      nextState = update[0];
+    }
     Curry._1(looper[/* updateRoute */5], /* record */[
           /* previous */currentState[0],
           /* next */nextState
@@ -60,7 +73,19 @@ function programStateWrapper(initState, looper) {
   };
   Curry._1(looper[/* listen */2], (function ($$location, action) {
           var update = Curry._2(looper[/* getFromRoute */4], action, getRoute($$location));
-          var nextState = update ? update[0] : currentState[0];
+          var nextState;
+          if (typeof update === "number") {
+            nextState = currentState[0];
+          } else if (update.tag) {
+            var nextState$1 = update[0];
+            Curry._1(update[1], /* record */[
+                  /* state */nextState$1,
+                  /* send */runner
+                ]);
+            nextState = nextState$1;
+          } else {
+            nextState = update[0];
+          }
           currentState[0] = nextState;
           Curry._1(looper[/* render */6], /* record */[
                 /* state */nextState,
@@ -80,7 +105,21 @@ function loop(router, update, view, toRoute, fromRoute, enqueueRender) {
           /* init */(function () {
               var $$location = Router$ReasonTea.getCurrent(router);
               var match = Curry._2(fromRoute, /* Init */0, getRoute($$location));
-              var initState = match ? match[0] : Pervasives.failwith("Must init a state");
+              var initState;
+              if (typeof match === "number") {
+                initState = Pervasives.failwith("Must init a state");
+              } else if (match.tag) {
+                throw [
+                      Caml_builtin_exceptions.match_failure,
+                      /* tuple */[
+                        "Program.re",
+                        130,
+                        10
+                      ]
+                    ];
+              } else {
+                initState = match[0];
+              }
               var match$1 = Curry._1(toRoute, /* record */[
                     /* previous */initState,
                     /* next */initState
