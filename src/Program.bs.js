@@ -2,7 +2,6 @@
 'use strict';
 
 var Curry = require("bs-platform/lib/js/curry.js");
-var BsHistory = require("bs-history/src/BsHistory.bs.js");
 var Pervasives = require("bs-platform/lib/js/pervasives.js");
 var Js_primitive = require("bs-platform/lib/js/js_primitive.js");
 var Route$ReasonTea = require("./Route.bs.js");
@@ -60,10 +59,7 @@ function programStateWrapper(initState, looper) {
     return /* () */0;
   };
   Curry._1(looper[/* listen */2], (function ($$location, action) {
-          var routeAction = action !== 4003185 ? (
-              action >= 893009402 ? (console.log("listener: push"), /* Push */1) : (console.log("listener: replace"), /* Replace */3)
-            ) : (console.log("listener: pop"), /* Pop */2);
-          var update = Curry._2(looper[/* getFromRoute */4], routeAction, getRoute($$location));
+          var update = Curry._2(looper[/* getFromRoute */4], action, getRoute($$location));
           var nextState = update ? update[0] : currentState[0];
           currentState[0] = nextState;
           Curry._1(looper[/* render */6], /* record */[
@@ -100,7 +96,7 @@ function loop(router, update, view, toRoute, fromRoute, enqueueRender) {
               return Curry._1(enqueueRender, Curry._1(view, self));
             }),
           /* listen */(function (callback) {
-              BsHistory.listen(callback)(router);
+              Router$ReasonTea.listen(callback, router);
               return /* () */0;
             }),
           /* dispatch */Curry.__2(update),

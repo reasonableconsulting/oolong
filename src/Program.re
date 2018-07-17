@@ -1,15 +1,10 @@
 type t('action, 'state, 'view) = {
   debug: string,
-  fromRoute: (routeAction, Route.t) => update('state),
+  fromRoute: (Router.Action.t, Route.t) => update('state),
   toRoute: previousAndNextState('state) => routeUpdate,
   update: ('action, 'state) => update('state),
   view: self('action, 'state) => 'view,
 }
-and routeAction =
-  | Init
-  | Push
-  | Pop
-  | Replace
 and self('action, 'state) = {
   state: 'state,
   send: 'action => unit,
@@ -31,9 +26,9 @@ and routeUpdate =
 and loop('action, 'state) = {
   init: unit => 'state,
   start: self('action, 'state) => unit,
-  listen: ((BsHistory.Location.t, BsHistory.Action.t) => unit) => unit,
+  listen: ((BsHistory.Location.t, Router.Action.t) => unit) => unit,
   dispatch: ('action, 'state) => update('state),
-  getFromRoute: (routeAction, Route.t) => update('state),
+  getFromRoute: (Router.Action.t, Route.t) => update('state),
   updateRoute: previousAndNextState('state) => unit,
   render: self('action, 'state) => unit,
 };
@@ -47,7 +42,7 @@ let getRoute = location =>
 
 let defaultRoute = Route.make(~path=[""], ~hash="", ~search="");
 
-let fromRouteDefault: (routeAction, Route.t) => update('state) =
+let fromRouteDefault: (Router.Action.t, Route.t) => update('state) =
   (_action, _route) => NoUpdate;
 let toRouteDefault: previousAndNextState('state) => routeUpdate =
   _prevAndNext => NoTransition;
@@ -91,21 +86,9 @@ let programStateWrapper: ('state, loop('action, 'state)) => unit =
       ();
     };
 
+    /* TODO: Group with subscriptions? */
     looper.listen((location, action) => {
-      let routeAction =
-        switch (action) {
-        | `Push =>
-          Js.log("listener: push");
-          Push;
-        | `Pop =>
-          Js.log("listener: pop");
-          Pop;
-        | `Replace =>
-          Js.log("listener: replace");
-          Replace;
-        };
-
-      let update = looper.getFromRoute(routeAction, getRoute(location));
+      let update = looper.getFromRoute(action, getRoute(location));
       let nextState =
         switch (update) {
         | Update(nextState) => nextState
@@ -127,7 +110,7 @@ let loop:
     ~update: ('action, 'state) => update('state),
     ~view: self('action, 'state) => 'view,
     ~toRoute: previousAndNextState('state) => routeUpdate,
-    ~fromRoute: (routeAction, Route.t) => update('state),
+    ~fromRoute: (Router.Action.t, Route.t) => update('state),
     ~enqueueRender: 'view => unit
   ) =>
   loop('action, 'state) =
@@ -158,7 +141,8 @@ let loop:
         initState;
       },
       listen: callback => {
-        let unlisten = BsHistory.listen(callback, router);
+        /* TODO: Unlisten on shutdown */
+        let unlisten = Router.listen(callback, router);
         ();
       },
       start: self => {
