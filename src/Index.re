@@ -10,22 +10,19 @@ type action =
 let app = () => {
   let program = Program.routerProgram("CounterApp");
 
+  let double: Program.self(action, state) => unit =
+    self => {
+      Js.log("init side effect");
+      self.send(Double(self.state.counter));
+    };
+
   {
     ...program,
     fromRoute: (routeAction, route) =>
       switch (routeAction) {
       | Init =>
         switch (route.path) {
-        | ["", counter] =>
-          Program.UpdateWithSideEffects(
-            {counter: int_of_string(counter)},
-            (
-              self => {
-                Js.log("init side effect");
-                self.send(Double(self.state.counter));
-              }
-            ),
-          )
+        | ["", counter] => Program.Update({counter: int_of_string(counter)})
         | _ => Program.Update({counter: 0})
         }
       | Push
@@ -35,12 +32,7 @@ let app = () => {
         | ["", counter] =>
           Program.UpdateWithSideEffects(
             {counter: int_of_string(counter)},
-            (
-              self => {
-                Js.log("init side effect");
-                self.send(Double(self.state.counter));
-              }
-            ),
+            double,
           )
         | _ => Program.NoUpdate
         }
@@ -66,15 +58,7 @@ let app = () => {
         Program.Update({counter: num * 2});
       | Increment =>
         Js.log("increment");
-        Program.UpdateWithSideEffects(
-          {counter: state.counter + 1},
-          (
-            self => {
-              Js.log2("side effect", self.state.counter);
-              self.send(Double(self.state.counter));
-            }
-          ),
-        );
+        Program.UpdateWithSideEffects({counter: state.counter + 1}, double);
       | Decrement =>
         Js.log("decrement");
         Program.Update({counter: state.counter - 1});

@@ -7,7 +7,6 @@ var Pervasives = require("bs-platform/lib/js/pervasives.js");
 var Js_primitive = require("bs-platform/lib/js/js_primitive.js");
 var Route$ReasonTea = require("./Route.bs.js");
 var Router$ReasonTea = require("./Router.bs.js");
-var Caml_builtin_exceptions = require("bs-platform/lib/js/caml_builtin_exceptions.js");
 
 function getRoute($$location) {
   return Route$ReasonTea.make(Route$ReasonTea.path($$location), Route$ReasonTea.hash($$location), Route$ReasonTea.search($$location));
@@ -46,13 +45,18 @@ function program(debug) {
 
 function programStateWrapper(initState, maybeEffect, looper) {
   var currentState = /* record */[/* contents */initState];
+  var loopCounter = /* record */[/* contents */0];
   var runner = function (action) {
+    loopCounter[0] = loopCounter[0] + 1 | 0;
     var match = Curry._2(looper[/* dispatch */2], action, currentState[0]);
     handle(match[0], match[1]);
-    Curry._1(looper[/* render */5], /* record */[
-          /* state */currentState[0],
-          /* send */runner
-        ]);
+    loopCounter[0] = loopCounter[0] - 1 | 0;
+    if (loopCounter[0] === 0) {
+      Curry._1(looper[/* render */5], /* record */[
+            /* state */currentState[0],
+            /* send */runner
+          ]);
+    }
     return /* () */0;
   };
   var handle = function (maybeNextState, maybeEffect) {
@@ -65,17 +69,18 @@ function programStateWrapper(initState, maybeEffect, looper) {
             ]);
         console.log("update state", currentState[0], nextState);
         currentState[0] = nextState;
-        if (maybeEffect !== undefined) {
-          Curry._1(maybeEffect, /* record */[
-                /* state */currentState[0],
-                /* send */runner
-              ]);
-        }
-        
       }
       
     }
-    return /* () */0;
+    if (maybeEffect !== undefined) {
+      Curry._1(maybeEffect, /* record */[
+            /* state */currentState[0],
+            /* send */runner
+          ]);
+      return /* () */0;
+    } else {
+      return /* () */0;
+    }
   };
   Curry._1(looper[/* listen */1], (function ($$location, action) {
           var match = Curry._2(looper[/* getFromRoute */3], action, getRoute($$location));
@@ -146,31 +151,15 @@ function loop(router, update, view, toRoute, fromRoute, enqueueRender) {
                 if (Caml_obj.caml_notequal(previousRoute[0], route)) {
                   previousRoute[0] = route;
                   router.replace(Route$ReasonTea.toUrl(route));
-                } else {
-                  throw [
-                        Caml_builtin_exceptions.match_failure,
-                        /* tuple */[
-                          "Program.re",
-                          181,
-                          10
-                        ]
-                      ];
                 }
+                
               } else {
                 var route$1 = update[0];
                 if (Caml_obj.caml_notequal(previousRoute[0], route$1)) {
                   previousRoute[0] = route$1;
                   router.push(Route$ReasonTea.toUrl(route$1));
-                } else {
-                  throw [
-                        Caml_builtin_exceptions.match_failure,
-                        /* tuple */[
-                          "Program.re",
-                          181,
-                          10
-                        ]
-                      ];
                 }
+                
               }
               return /* () */0;
             }),

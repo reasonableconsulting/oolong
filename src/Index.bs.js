@@ -17,6 +17,10 @@ Belt_Debug.setupChromeDebugger(/* () */0);
 
 function app() {
   var program = Program$ReasonTea.routerProgram("CounterApp");
+  var $$double = function (self) {
+    console.log("init side effect");
+    return Curry._1(self[/* send */1], /* Double */[self[/* state */0][/* counter */0]]);
+  };
   return /* record */[
           /* debug */program[/* debug */0],
           /* fromRoute */(function (routeAction, route) {
@@ -27,10 +31,7 @@ function app() {
                   if (match$1 && !match$1[1]) {
                     return /* UpdateWithSideEffects */Block.__(1, [
                               /* record */[/* counter */Caml_format.caml_int_of_string(match$1[0])],
-                              (function (self) {
-                                  console.log("init side effect");
-                                  return Curry._1(self[/* send */1], /* Double */[self[/* state */0][/* counter */0]]);
-                                })
+                              $$double
                             ]);
                   } else {
                     return /* NoUpdate */0;
@@ -43,13 +44,7 @@ function app() {
                 if (match$2 && match$2[0] === "") {
                   var match$3 = match$2[1];
                   if (match$3 && !match$3[1]) {
-                    return /* UpdateWithSideEffects */Block.__(1, [
-                              /* record */[/* counter */Caml_format.caml_int_of_string(match$3[0])],
-                              (function (self) {
-                                  console.log("init side effect");
-                                  return Curry._1(self[/* send */1], /* Double */[self[/* state */0][/* counter */0]]);
-                                })
-                            ]);
+                    return /* Update */Block.__(0, [/* record */[/* counter */Caml_format.caml_int_of_string(match$3[0])]]);
                   } else {
                     return /* Update */Block.__(0, [/* record */[/* counter */0]]);
                   }
@@ -81,10 +76,7 @@ function app() {
                       console.log("increment");
                       return /* UpdateWithSideEffects */Block.__(1, [
                                 /* record */[/* counter */state[/* counter */0] + 1 | 0],
-                                (function (self) {
-                                    console.log("side effect", self[/* state */0][/* counter */0]);
-                                    return Curry._1(self[/* send */1], /* Double */[self[/* state */0][/* counter */0]]);
-                                  })
+                                $$double
                               ]);
                   case 1 : 
                       console.log("decrement");

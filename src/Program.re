@@ -75,6 +75,7 @@ let programStateWrapper:
   unit =
   (initState, maybeEffect, looper) => {
     let currentState = ref(initState);
+    let loopCounter = ref(0);
 
     let rec makeSelf = state => {send: runner, state}
     and handle = (maybeNextState, maybeEffect) => {
@@ -86,26 +87,31 @@ let programStateWrapper:
 
           Js.log3("update state", currentState^, nextState);
           currentState := nextState;
-
-          switch (maybeEffect) {
-          | Some(effect) =>
-            effect(makeSelf(currentState^));
-            ();
-          | None => ()
-          };
-          ();
         | Some(_) => ()
         | None => ()
         };
-      ();
+
+      switch (maybeEffect) {
+      | Some(effect) =>
+        effect(makeSelf(currentState^));
+        ();
+      | None => ()
+      };
     }
     and runner = action => {
+      loopCounter := loopCounter^ + 1;
+
       let (maybeNextState, maybeEffect) =
         looper.dispatch(action, currentState^);
 
       handle(maybeNextState, maybeEffect);
 
-      looper.render(makeSelf(currentState^));
+      loopCounter := loopCounter^ - 1;
+      /* TODO: requestAnimationFrame on this? */
+      if (loopCounter^ == 0) {
+        looper.render(makeSelf(currentState^));
+      };
+
       ();
     };
 
@@ -183,9 +189,11 @@ let loop:
             previousRoute := route;
             BsHistory.push(Route.toUrl(route), router);
             ();
+          | Push(_) => ()
           | Replace(route) when previousRoute^ != route =>
             previousRoute := route;
             BsHistory.replace(Route.toUrl(route), router);
+          | Replace(_) => ()
           | Pop => /* TODO: goBack */ ()
           | NoTransition => ()
           };
