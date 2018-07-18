@@ -2,6 +2,7 @@ Belt.Debug.setupChromeDebugger();
 
 type state = {counter: int};
 type action =
+  | Double(int)
   | Increment
   | Decrement
   | Nothing;
@@ -15,18 +16,37 @@ let app = () => {
       switch (routeAction) {
       | Init =>
         switch (route.path) {
-        | ["", counter] => Program.Update({counter: int_of_string(counter)})
+        | ["", counter] =>
+          Program.UpdateWithSideEffects(
+            {counter: int_of_string(counter)},
+            (
+              self => {
+                Js.log("init side effect");
+                self.send(Double(self.state.counter));
+              }
+            ),
+          )
         | _ => Program.Update({counter: 0})
         }
       | Push
       | Replace
       | Pop =>
         switch (route.path) {
-        | ["", counter] => Program.Update({counter: int_of_string(counter)})
+        | ["", counter] =>
+          Program.UpdateWithSideEffects(
+            {counter: int_of_string(counter)},
+            (
+              self => {
+                Js.log("init side effect");
+                self.send(Double(self.state.counter));
+              }
+            ),
+          )
         | _ => Program.NoUpdate
         }
       },
-    toRoute: ({previous, next}) =>
+    toRoute: ({previous, next}) => {
+      Js.log3("toRoute", previous, next);
       if (previous == next) {
         Program.NoTransition;
       } else {
@@ -37,12 +57,30 @@ let app = () => {
             ~hash="",
           ),
         );
-      },
+      };
+    },
     update: (action, state) =>
       switch (action) {
-      | Increment => Program.Update({counter: state.counter + 1})
-      | Decrement => Program.Update({counter: state.counter - 1})
-      | Nothing => Program.NoUpdate
+      | Double(num) =>
+        Js.log("double");
+        Program.Update({counter: num * 2});
+      | Increment =>
+        Js.log("increment");
+        Program.UpdateWithSideEffects(
+          {counter: state.counter + 1},
+          (
+            self => {
+              Js.log2("side effect", self.state.counter);
+              self.send(Double(self.state.counter));
+            }
+          ),
+        );
+      | Decrement =>
+        Js.log("decrement");
+        Program.Update({counter: state.counter - 1});
+      | Nothing =>
+        Js.log("nothing");
+        Program.NoUpdate;
       },
     view: self =>
       <div>

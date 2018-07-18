@@ -2,6 +2,7 @@
 'use strict';
 
 var Curry = require("bs-platform/lib/js/curry.js");
+var Caml_obj = require("bs-platform/lib/js/caml_obj.js");
 var Pervasives = require("bs-platform/lib/js/pervasives.js");
 var Js_primitive = require("bs-platform/lib/js/js_primitive.js");
 var Route$ReasonTea = require("./Route.bs.js");
@@ -43,57 +44,50 @@ function program(debug) {
         ];
 }
 
-function programStateWrapper(initState, looper) {
+function programStateWrapper(initState, maybeEffect, looper) {
   var currentState = /* record */[/* contents */initState];
   var runner = function (action) {
-    var update = Curry._2(looper[/* dispatch */3], action, currentState[0]);
-    var nextState;
-    if (typeof update === "number") {
-      nextState = currentState[0];
-    } else if (update.tag) {
-      var nextState$1 = update[0];
-      Curry._1(update[1], /* record */[
-            /* state */nextState$1,
-            /* send */runner
-          ]);
-      nextState = nextState$1;
-    } else {
-      nextState = update[0];
-    }
-    Curry._1(looper[/* updateRoute */5], /* record */[
-          /* previous */currentState[0],
-          /* next */nextState
-        ]);
-    currentState[0] = nextState;
-    Curry._1(looper[/* render */6], /* record */[
-          /* state */nextState,
+    var match = Curry._2(looper[/* dispatch */2], action, currentState[0]);
+    handle(match[0], match[1]);
+    Curry._1(looper[/* render */5], /* record */[
+          /* state */currentState[0],
           /* send */runner
         ]);
     return /* () */0;
   };
-  Curry._1(looper[/* listen */2], (function ($$location, action) {
-          var update = Curry._2(looper[/* getFromRoute */4], action, getRoute($$location));
-          var nextState;
-          if (typeof update === "number") {
-            nextState = currentState[0];
-          } else if (update.tag) {
-            var nextState$1 = update[0];
-            Curry._1(update[1], /* record */[
-                  /* state */nextState$1,
-                  /* send */runner
-                ]);
-            nextState = nextState$1;
-          } else {
-            nextState = update[0];
-          }
-          currentState[0] = nextState;
-          Curry._1(looper[/* render */6], /* record */[
-                /* state */nextState,
+  var handle = function (maybeNextState, maybeEffect) {
+    if (maybeNextState !== undefined) {
+      var nextState = Js_primitive.valFromOption(maybeNextState);
+      if (Caml_obj.caml_notequal(nextState, currentState[0])) {
+        Curry._1(looper[/* updateRoute */4], /* record */[
+              /* previous */currentState[0],
+              /* next */nextState
+            ]);
+        console.log("update state", currentState[0], nextState);
+        currentState[0] = nextState;
+        if (maybeEffect !== undefined) {
+          Curry._1(maybeEffect, /* record */[
+                /* state */currentState[0],
                 /* send */runner
               ]);
-          return /* () */0;
+        }
+        
+      }
+      
+    }
+    return /* () */0;
+  };
+  Curry._1(looper[/* listen */1], (function ($$location, action) {
+          var match = Curry._2(looper[/* getFromRoute */3], action, getRoute($$location));
+          return handle(match[0], match[1]);
         }));
-  Curry._1(looper[/* start */1], /* record */[
+  if (maybeEffect !== undefined) {
+    Curry._1(maybeEffect, /* record */[
+          /* state */currentState[0],
+          /* send */runner
+        ]);
+  }
+  Curry._1(looper[/* render */5], /* record */[
         /* state */currentState[0],
         /* send */runner
       ]);
@@ -101,57 +95,87 @@ function programStateWrapper(initState, looper) {
 }
 
 function loop(router, update, view, toRoute, fromRoute, enqueueRender) {
+  var previousRoute = /* record */[/* contents */getRoute(Router$ReasonTea.getCurrent(router))];
+  var updateToOptions = function (update) {
+    if (typeof update === "number") {
+      return /* tuple */[
+              undefined,
+              undefined
+            ];
+    } else if (update.tag) {
+      return /* tuple */[
+              Js_primitive.some(update[0]),
+              update[1]
+            ];
+    } else {
+      return /* tuple */[
+              Js_primitive.some(update[0]),
+              undefined
+            ];
+    }
+  };
   return /* record */[
           /* init */(function () {
               var $$location = Router$ReasonTea.getCurrent(router);
-              var match = Curry._2(fromRoute, /* Init */0, getRoute($$location));
-              var initState;
-              if (typeof match === "number") {
-                initState = Pervasives.failwith("Must init a state");
-              } else if (match.tag) {
-                throw [
-                      Caml_builtin_exceptions.match_failure,
-                      /* tuple */[
-                        "Program.re",
-                        130,
-                        10
-                      ]
-                    ];
-              } else {
-                initState = match[0];
-              }
-              var match$1 = Curry._1(toRoute, /* record */[
-                    /* previous */initState,
-                    /* next */initState
-                  ]);
-              if (typeof match$1 === "number" && match$1 !== 0) {
-                
-              } else {
-                Pervasives.failwith("toRoute should result in no transition when called with initial state.");
-              }
-              return initState;
-            }),
-          /* start */(function (self) {
-              return Curry._1(enqueueRender, Curry._1(view, self));
+              return updateToOptions(Curry._2(fromRoute, /* Init */0, getRoute($$location)));
             }),
           /* listen */(function (callback) {
               Router$ReasonTea.listen(callback, router);
               return /* () */0;
             }),
-          /* dispatch */Curry.__2(update),
-          /* getFromRoute */Curry.__2(fromRoute),
+          /* dispatch */(function (action, state) {
+              return updateToOptions(Curry._2(update, action, state));
+            }),
+          /* getFromRoute */(function (action, route) {
+              var $$location = getRoute(Router$ReasonTea.getCurrent(router));
+              if (Caml_obj.caml_notequal(previousRoute[0], $$location)) {
+                return updateToOptions(Curry._2(fromRoute, action, route));
+              } else {
+                return /* tuple */[
+                        undefined,
+                        undefined
+                      ];
+              }
+            }),
           /* updateRoute */(function (prevAndNextState) {
               var update = Curry._1(toRoute, prevAndNextState);
               if (typeof update === "number") {
                 update === 0;
               } else if (update.tag) {
-                router.replace(Route$ReasonTea.toUrl(update[0]));
+                var route = update[0];
+                if (Caml_obj.caml_notequal(previousRoute[0], route)) {
+                  previousRoute[0] = route;
+                  router.replace(Route$ReasonTea.toUrl(route));
+                } else {
+                  throw [
+                        Caml_builtin_exceptions.match_failure,
+                        /* tuple */[
+                          "Program.re",
+                          181,
+                          10
+                        ]
+                      ];
+                }
               } else {
-                router.push(Route$ReasonTea.toUrl(update[0]));
+                var route$1 = update[0];
+                if (Caml_obj.caml_notequal(previousRoute[0], route$1)) {
+                  previousRoute[0] = route$1;
+                  router.push(Route$ReasonTea.toUrl(route$1));
+                } else {
+                  throw [
+                        Caml_builtin_exceptions.match_failure,
+                        /* tuple */[
+                          "Program.re",
+                          181,
+                          10
+                        ]
+                      ];
+                }
               }
               return /* () */0;
             }),
           /* render */(function (self) {
+              console.log("render", self[/* state */0]);
               return Curry._1(enqueueRender, Curry._1(view, self));
             })
         ];
@@ -162,8 +186,19 @@ var defaultRouter = Router$ReasonTea.memory(/* () */0);
 function startup($staropt$star, program, renderer) {
   var router = $staropt$star !== undefined ? Js_primitive.valFromOption($staropt$star) : defaultRouter;
   var looper = loop(router, program[/* update */3], program[/* view */4], program[/* toRoute */2], program[/* fromRoute */1], renderer);
-  var initState = Curry._1(looper[/* init */0], /* () */0);
-  programStateWrapper(initState, looper);
+  var match = Curry._1(looper[/* init */0], /* () */0);
+  var maybeInitState = match[0];
+  var initState = maybeInitState !== undefined ? Js_primitive.valFromOption(maybeInitState) : Pervasives.failwith("`fromRoute` must return an initial state");
+  var match$1 = Curry._1(program[/* toRoute */2], /* record */[
+        /* previous */initState,
+        /* next */initState
+      ]);
+  if (typeof match$1 === "number" && match$1 !== 0) {
+    
+  } else {
+    Pervasives.failwith("toRoute should result in no transition when called with initial state.");
+  }
+  programStateWrapper(initState, match[1], looper);
   return /* () */0;
 }
 

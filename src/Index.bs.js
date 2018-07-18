@@ -25,7 +25,13 @@ function app() {
                 if (match && match[0] === "") {
                   var match$1 = match[1];
                   if (match$1 && !match$1[1]) {
-                    return /* Update */Block.__(0, [/* record */[/* counter */Caml_format.caml_int_of_string(match$1[0])]]);
+                    return /* UpdateWithSideEffects */Block.__(1, [
+                              /* record */[/* counter */Caml_format.caml_int_of_string(match$1[0])],
+                              (function (self) {
+                                  console.log("init side effect");
+                                  return Curry._1(self[/* send */1], /* Double */[self[/* state */0][/* counter */0]]);
+                                })
+                            ]);
                   } else {
                     return /* NoUpdate */0;
                   }
@@ -37,7 +43,13 @@ function app() {
                 if (match$2 && match$2[0] === "") {
                   var match$3 = match$2[1];
                   if (match$3 && !match$3[1]) {
-                    return /* Update */Block.__(0, [/* record */[/* counter */Caml_format.caml_int_of_string(match$3[0])]]);
+                    return /* UpdateWithSideEffects */Block.__(1, [
+                              /* record */[/* counter */Caml_format.caml_int_of_string(match$3[0])],
+                              (function (self) {
+                                  console.log("init side effect");
+                                  return Curry._1(self[/* send */1], /* Double */[self[/* state */0][/* counter */0]]);
+                                })
+                            ]);
                   } else {
                     return /* Update */Block.__(0, [/* record */[/* counter */0]]);
                   }
@@ -48,7 +60,9 @@ function app() {
             }),
           /* toRoute */(function (param) {
               var next = param[/* next */1];
-              if (Caml_obj.caml_equal(param[/* previous */0], next)) {
+              var previous = param[/* previous */0];
+              console.log("toRoute", previous, next);
+              if (Caml_obj.caml_equal(previous, next)) {
                 return /* NoTransition */1;
               } else {
                 return /* Push */Block.__(0, [Route$ReasonTea.make(/* :: */[
@@ -61,14 +75,28 @@ function app() {
               }
             }),
           /* update */(function (action, state) {
-              switch (action) {
-                case 0 : 
-                    return /* Update */Block.__(0, [/* record */[/* counter */state[/* counter */0] + 1 | 0]]);
-                case 1 : 
-                    return /* Update */Block.__(0, [/* record */[/* counter */state[/* counter */0] - 1 | 0]]);
-                case 2 : 
-                    return /* NoUpdate */0;
-                
+              if (typeof action === "number") {
+                switch (action) {
+                  case 0 : 
+                      console.log("increment");
+                      return /* UpdateWithSideEffects */Block.__(1, [
+                                /* record */[/* counter */state[/* counter */0] + 1 | 0],
+                                (function (self) {
+                                    console.log("side effect", self[/* state */0][/* counter */0]);
+                                    return Curry._1(self[/* send */1], /* Double */[self[/* state */0][/* counter */0]]);
+                                  })
+                              ]);
+                  case 1 : 
+                      console.log("decrement");
+                      return /* Update */Block.__(0, [/* record */[/* counter */state[/* counter */0] - 1 | 0]]);
+                  case 2 : 
+                      console.log("nothing");
+                      return /* NoUpdate */0;
+                  
+                }
+              } else {
+                console.log("double");
+                return /* Update */Block.__(0, [/* record */[/* counter */(action[0] << 1)]]);
               }
             }),
           /* view */(function (self) {

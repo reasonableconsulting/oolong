@@ -16,19 +16,24 @@ and previousAndNextState('state) = {
 and update('action, 'state) =
   | Update('state)
   /* | SideEffects(self('state, 'action) => unit) */
-  | UpdateWithSideEffects('state, self('action, 'state) => unit)
+  | UpdateWithSideEffects('state, sideEffect('action, 'state))
   | NoUpdate
 and routeUpdate =
   | Push(Route.t)
   | Replace(Route.t)
   | Pop
   | NoTransition
+and sideEffect('action, 'state) = self('action, 'state) => unit
 and loop('action, 'state) = {
-  init: unit => 'state,
-  start: self('action, 'state) => unit,
+  init: unit => (option('state), option(sideEffect('action, 'state))),
+  /* start: self('action, 'state) => unit, */
   listen: ((BsHistory.Location.t, Router.Action.t) => unit) => unit,
-  dispatch: ('action, 'state) => update('action, 'state),
-  getFromRoute: (Router.Action.t, Route.t) => update('action, 'state),
+  dispatch:
+    ('action, 'state) =>
+    (option('state), option(sideEffect('action, 'state))),
+  getFromRoute:
+    (Router.Action.t, Route.t) =>
+    (option('state), option(sideEffect('action, 'state))),
   updateRoute: previousAndNextState('state) => unit,
   render: self('action, 'state) => unit,
 };
@@ -65,48 +70,61 @@ let program: string => t('action, 'state, 'view) =
     template;
   };
 
-let programStateWrapper: ('state, loop('action, 'state)) => unit =
-  (initState, looper) => {
+let programStateWrapper:
+  ('state, option(sideEffect('action, 'state)), loop('action, 'state)) =>
+  unit =
+  (initState, maybeEffect, looper) => {
     let currentState = ref(initState);
 
     let rec makeSelf = state => {send: runner, state}
-    and runner = action => {
-      let update = looper.dispatch(action, currentState^);
-      let nextState =
-        switch (update) {
-        | UpdateWithSideEffects(nextState, sideEffect) =>
-          sideEffect(makeSelf(nextState));
-          nextState;
-        | Update(nextState) => nextState
-        | NoUpdate => currentState^
+    and handle = (maybeNextState, maybeEffect) => {
+      let _ =
+        switch (maybeNextState) {
+        | Some(nextState) when nextState != currentState^ =>
+          /* TODO: This should be an effect */
+          looper.updateRoute({previous: currentState^, next: nextState});
+
+          Js.log3("update state", currentState^, nextState);
+          currentState := nextState;
+
+          switch (maybeEffect) {
+          | Some(effect) =>
+            effect(makeSelf(currentState^));
+            ();
+          | None => ()
+          };
+          ();
+        | Some(_) => ()
+        | None => ()
         };
+      ();
+    }
+    and runner = action => {
+      let (maybeNextState, maybeEffect) =
+        looper.dispatch(action, currentState^);
 
-      let _ = looper.updateRoute({previous: currentState^, next: nextState});
+      handle(maybeNextState, maybeEffect);
 
-      currentState := nextState;
-
-      looper.render(makeSelf(nextState));
+      looper.render(makeSelf(currentState^));
       ();
     };
 
     /* TODO: Group with subscriptions? */
     looper.listen((location, action) => {
-      let update = looper.getFromRoute(action, getRoute(location));
-      let nextState =
-        switch (update) {
-        | UpdateWithSideEffects(nextState, sideEffect) =>
-          sideEffect(makeSelf(nextState));
-          nextState;
-        | Update(nextState) => nextState
-        | NoUpdate => currentState^
-        };
+      let (maybeNextState, maybeEffect) =
+        looper.getFromRoute(action, getRoute(location));
 
-      currentState := nextState;
-      looper.render(makeSelf(nextState));
-      ();
+      handle(maybeNextState, maybeEffect);
     });
 
-    looper.start(makeSelf(currentState^));
+    switch (maybeEffect) {
+    | Some(effect) =>
+      effect(makeSelf(currentState^));
+      ();
+    | None => ()
+    };
+
+    looper.render(makeSelf(currentState^));
     ();
   };
 
@@ -123,58 +141,51 @@ let loop:
   (~router, ~update, ~view, ~toRoute, ~fromRoute, ~enqueueRender) => {
     let _ = ();
 
+    let previousRoute = ref(getRoute(Router.getCurrent(router)));
+
+    let updateToOptions = update =>
+      switch (update) {
+      | Update(nextState) => (Some(nextState), None)
+      | UpdateWithSideEffects(nextState, sideEffect) => (
+          Some(nextState),
+          Some(sideEffect),
+        )
+      | NoUpdate => (None, None)
+      /* | SideEffects(_effect) => failwith("Must init a state") */
+      };
+
     {
       init: _ => {
+        /* TODO: Compare with previousLocation? */
         let location = Router.getCurrent(router);
-        let initState =
-          switch (fromRoute(Init, getRoute(location))) {
-          | Update(state) => state
-          /* TODO: This needs access to the makeSelf/runner */
-          /* | UpdateWithSideEffects(nextState, sideEffect) =>
-             sideEffect(makeSelf(nextState));
-             nextState; */
-          | NoUpdate => failwith("Must init a state")
-          /* | SideEffects(_effect) => failwith("Must init a state") */
-          };
-
-        /* TOOD: DevMode only */
-        let _ =
-          switch (toRoute({previous: initState, next: initState})) {
-          | NoTransition => ()
-          | _ =>
-            failwith(
-              "toRoute should result in no transition when called with initial state.",
-            )
-          };
-
-        initState;
+        updateToOptions(fromRoute(Init, getRoute(location)));
       },
       listen: callback => {
         /* TODO: Unlisten on shutdown */
         let unlisten = Router.listen(callback, router);
         ();
       },
-      start: self => {
-        let initView = view(self);
-        enqueueRender(initView);
-      },
-      dispatch: (action, state) => {
-        let nextState = update(action, state);
-
-        nextState;
-      },
+      dispatch: (action, state) => updateToOptions(update(action, state)),
       getFromRoute: (action, route) => {
-        let next = fromRoute(action, route);
-
-        next;
+        let location = getRoute(Router.getCurrent(router));
+        if (previousRoute^ != location) {
+          updateToOptions(fromRoute(action, route));
+        } else {
+          (None, None);
+        };
       },
       updateRoute: prevAndNextState => {
         let update = toRoute(prevAndNextState);
 
         let _ =
           switch (update) {
-          | Push(route) => BsHistory.push(Route.toUrl(route), router)
-          | Replace(route) => BsHistory.replace(Route.toUrl(route), router)
+          | Push(route) when previousRoute^ != route =>
+            previousRoute := route;
+            BsHistory.push(Route.toUrl(route), router);
+            ();
+          | Replace(route) when previousRoute^ != route =>
+            previousRoute := route;
+            BsHistory.replace(Route.toUrl(route), router);
           | Pop => /* TODO: goBack */ ()
           | NoTransition => ()
           };
@@ -182,6 +193,7 @@ let loop:
         ();
       },
       render: self => {
+        Js.log2("render", self.state);
         let nextView = view(self);
 
         enqueueRender(nextView);
@@ -204,9 +216,23 @@ let startup:
         ~enqueueRender=renderer,
       );
 
-    let initState = looper.init();
+    let (maybeInitState, maybeInitEffect) = looper.init();
+    let initState =
+      switch (maybeInitState) {
+      | Some(state) => state
+      | None => failwith("`fromRoute` must return an initial state")
+      };
+    /* TOOD: DevMode only */
+    let _ =
+      switch (program.toRoute({previous: initState, next: initState})) {
+      | NoTransition => ()
+      | _ =>
+        failwith(
+          "toRoute should result in no transition when called with initial state.",
+        )
+      };
 
-    let _ = programStateWrapper(initState, looper);
+    let _ = programStateWrapper(initState, maybeInitEffect, looper);
     ();
   };
 
