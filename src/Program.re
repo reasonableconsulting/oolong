@@ -93,7 +93,7 @@ let programStateWrapper:
           /* TODO: This should be an effect */
           looper.updateRoute({previous: currentState^, next: nextState});
 
-          Js.log3("update state", currentState^, nextState);
+          /* Js.log3("update state", currentState^, nextState); */
           currentState := nextState;
         | Some(_) => ()
         | None => ()
@@ -209,7 +209,7 @@ let loop:
         ();
       },
       render: self => {
-        Js.log2("render", self.state);
+        /* Js.log2("render", self.state); */
         let nextView = view(self);
 
         enqueueRender(nextView);
