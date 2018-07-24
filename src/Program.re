@@ -8,6 +8,10 @@ type t('action, 'state, 'view) = {
 and self('action, 'state) = {
   state: 'state,
   send: 'action => unit,
+  handle:
+    'payload .
+    (('payload, self('action, 'state)) => unit, 'payload) => unit,
+
 }
 and previousAndNextState('state) = {
   previous: 'state,
@@ -77,7 +81,11 @@ let programStateWrapper:
     let currentState = ref(initState);
     let loopCounter = ref(0);
 
-    let rec makeSelf = state => {send: runner, state}
+    let rec makeSelf = state => {
+      send: runner,
+      state,
+      handle: (fn, data) => fn(data, makeSelf(state)),
+    }
     and handle = (maybeNextState, maybeEffect) => {
       let _ =
         switch (maybeNextState) {
