@@ -8,8 +8,8 @@ let make = (~program, _children) => {
   ...component,
   initialState: () => ReasonReact.null,
   didMount: self =>
-    Program.startup(program(), view => self.send(Render(view))),
-  reducer: (action, state) =>
+    Oolong_Program.startup(program(), view => self.send(Render(view))),
+  reducer: (action, _state) =>
     switch (action) {
     | Render(view) => ReasonReact.Update(view)
     },

@@ -1,3 +1,6 @@
+module Route = Oolong_Route;
+module Router = Oolong_Router;
+
 type t('action, 'state, 'view) = {
   debug: string,
   fromRoute: (Router.Action.t, Route.t) => update('action, 'state),
@@ -9,7 +12,7 @@ and self('action, 'state) = {
   state: 'state,
   send: 'action => unit,
   handle:
-    'payload .
+    'payload.
     (('payload, self('action, 'state)) => unit, 'payload) => unit,
 
 }
