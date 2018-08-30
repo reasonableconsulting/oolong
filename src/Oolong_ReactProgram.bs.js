@@ -3,6 +3,7 @@
 
 var Block = require("bs-platform/lib/js/block.js");
 var Curry = require("bs-platform/lib/js/curry.js");
+var React = require("react");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
 var Oolong_Program = require("./Oolong_Program.bs.js");
 
@@ -24,7 +25,7 @@ function make(program, _) {
           /* willUpdate */component[/* willUpdate */7],
           /* shouldUpdate */component[/* shouldUpdate */8],
           /* render */(function (self) {
-              return self[/* state */1];
+              return React.createElement(React.Fragment, undefined, self[/* state */1]);
             }),
           /* initialState */(function () {
               return null;
