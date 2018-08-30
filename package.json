@@ -1,5 +1,5 @@
 {
-  "name": "reason-tea",
+  "name": "@reasonableconsulting/oolong",
   "version": "0.1.0",
   "scripts": {
     "start": "budo src/Index.bs.js --live",
@@ -12,7 +12,7 @@
     "BuckleScript"
   ],
   "author": "",
-  "license": "MIT",
+  "license": "MPL-2.0",
   "dependencies": {
     "bs-history": "^1.0.0",
     "history": "^4.7.2",
