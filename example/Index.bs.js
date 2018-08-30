@@ -4,19 +4,60 @@
 var Block = require("bs-platform/lib/js/block.js");
 var Curry = require("bs-platform/lib/js/curry.js");
 var React = require("react");
+var Oolong = require("../src/Oolong.bs.js");
 var Caml_obj = require("bs-platform/lib/js/caml_obj.js");
 var Belt_Debug = require("bs-platform/lib/js/belt_Debug.js");
 var ReactDOMRe = require("reason-react/src/ReactDOMRe.js");
 var Caml_format = require("bs-platform/lib/js/caml_format.js");
+var ReasonReact = require("reason-react/src/ReasonReact.js");
 var Js_primitive = require("bs-platform/lib/js/js_primitive.js");
-var Route$ReasonTea = require("./Route.bs.js");
-var Router$ReasonTea = require("./Router.bs.js");
-var Program$ReasonTea = require("./Program.bs.js");
+var Oolong_Route = require("../src/Oolong_Route.bs.js");
+var Oolong_Router = require("../src/Oolong_Router.bs.js");
+var Caml_builtin_exceptions = require("bs-platform/lib/js/caml_builtin_exceptions.js");
 
 Belt_Debug.setupChromeDebugger(/* () */0);
 
+var component = ReasonReact.statelessComponent("StringElement");
+
+function make(children) {
+  return /* record */[
+          /* debugName */component[/* debugName */0],
+          /* reactClassInternal */component[/* reactClassInternal */1],
+          /* handedOffState */component[/* handedOffState */2],
+          /* willReceiveProps */component[/* willReceiveProps */3],
+          /* didMount */component[/* didMount */4],
+          /* didUpdate */component[/* didUpdate */5],
+          /* willUnmount */component[/* willUnmount */6],
+          /* willUpdate */component[/* willUpdate */7],
+          /* shouldUpdate */component[/* shouldUpdate */8],
+          /* render */(function () {
+              if (children.length !== 1) {
+                throw [
+                      Caml_builtin_exceptions.match_failure,
+                      /* tuple */[
+                        "Index.re",
+                        10,
+                        10
+                      ]
+                    ];
+              } else {
+                return children[0];
+              }
+            }),
+          /* initialState */component[/* initialState */10],
+          /* retainedProps */component[/* retainedProps */11],
+          /* reducer */component[/* reducer */12],
+          /* jsElementWrapped */component[/* jsElementWrapped */13]
+        ];
+}
+
+var S = /* module */[
+  /* component */component,
+  /* make */make
+];
+
 function app() {
-  var program = Program$ReasonTea.routerProgram("CounterApp");
+  var program = Oolong.routerProgram("CounterApp");
   var $$double = function (self) {
     console.log("init side effect");
     return Curry._1(self[/* send */1], /* Double */[self[/* state */0][/* counter */0]]);
@@ -60,7 +101,7 @@ function app() {
               if (Caml_obj.caml_equal(previous, next)) {
                 return /* NoTransition */1;
               } else {
-                return /* Push */Block.__(0, [Route$ReasonTea.make(/* :: */[
+                return /* Push */Block.__(0, [Oolong_Route.make(/* :: */[
                                 "",
                                 /* :: */[
                                   String(next[/* counter */0]),
@@ -92,19 +133,19 @@ function app() {
               }
             }),
           /* view */(function (self) {
-              return React.createElement("div", undefined, String(self[/* state */0][/* counter */0]), React.createElement("button", {
+              return React.createElement("div", undefined, ReasonReact.element(undefined, undefined, make(/* array */[String(self[/* state */0][/* counter */0])])), React.createElement("button", {
                               onClick: (function () {
                                   return Curry._1(self[/* send */1], /* Increment */0);
                                 })
-                            }, "Increment"), React.createElement("button", {
+                            }, ReasonReact.element(undefined, undefined, make(/* array */["Increment"]))), React.createElement("button", {
                               onClick: (function () {
                                   return Curry._1(self[/* send */1], /* Decrement */1);
                                 })
-                            }, "Decrement"), React.createElement("button", {
+                            }, ReasonReact.element(undefined, undefined, make(/* array */["Decrement"]))), React.createElement("button", {
                               onClick: (function () {
                                   return Curry._1(self[/* send */1], /* Nothing */2);
                                 })
-                            }, "Do Nothing"));
+                            }, ReasonReact.element(undefined, undefined, make(/* array */["Do Nothing"]))));
             })
         ];
 }
@@ -117,9 +158,10 @@ function app() {
   }()
 ));
 
-Program$ReasonTea.startup(Js_primitive.some(Router$ReasonTea.hash(/* () */0)), app(/* () */0), (function (view) {
+Oolong.startup(Js_primitive.some(Oolong_Router.hash(/* () */0)), app(/* () */0), (function (view) {
         return ReactDOMRe.renderToElementWithId(view, "app");
       }));
 
+exports.S = S;
 exports.app = app;
 /*  Not a pure module */

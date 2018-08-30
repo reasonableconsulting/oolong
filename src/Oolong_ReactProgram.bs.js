@@ -4,7 +4,7 @@
 var Block = require("bs-platform/lib/js/block.js");
 var Curry = require("bs-platform/lib/js/curry.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
-var Program$ReasonTea = require("./Program.bs.js");
+var Oolong_Program = require("./Oolong_Program.bs.js");
 
 var component = ReasonReact.reducerComponent("ApplicationContainer");
 
@@ -15,7 +15,7 @@ function make(program, _) {
           /* handedOffState */component[/* handedOffState */2],
           /* willReceiveProps */component[/* willReceiveProps */3],
           /* didMount */(function (self) {
-              return Program$ReasonTea.startup(undefined, Curry._1(program, /* () */0), (function (view) {
+              return Oolong_Program.startup(undefined, Curry._1(program, /* () */0), (function (view) {
                             return Curry._1(self[/* send */3], /* Render */[view]);
                           }));
             }),

@@ -5,14 +5,14 @@ var Curry = require("bs-platform/lib/js/curry.js");
 var Caml_obj = require("bs-platform/lib/js/caml_obj.js");
 var Pervasives = require("bs-platform/lib/js/pervasives.js");
 var Js_primitive = require("bs-platform/lib/js/js_primitive.js");
-var Route$ReasonTea = require("./Route.bs.js");
-var Router$ReasonTea = require("./Router.bs.js");
+var Oolong_Route = require("./Oolong_Route.bs.js");
+var Oolong_Router = require("./Oolong_Router.bs.js");
 
 function getRoute($$location) {
-  return Route$ReasonTea.make(Route$ReasonTea.path($$location), Route$ReasonTea.hash($$location), Route$ReasonTea.search($$location));
+  return Oolong_Route.make(Oolong_Route.path($$location), Oolong_Route.hash($$location), Oolong_Route.search($$location));
 }
 
-var defaultRoute = Route$ReasonTea.make(/* :: */[
+var defaultRoute = Oolong_Route.make(/* :: */[
       "",
       /* [] */0
     ], "", "");
@@ -96,7 +96,7 @@ function programStateWrapper(initState, maybeEffect, looper) {
 }
 
 function loop(router, update, view, toRoute, fromRoute, enqueueRender) {
-  var previousRoute = /* record */[/* contents */getRoute(Router$ReasonTea.getCurrent(router))];
+  var previousRoute = /* record */[/* contents */getRoute(Oolong_Router.getCurrent(router))];
   var updateToOptions = function (update) {
     if (typeof update === "number") {
       return /* tuple */[
@@ -117,18 +117,18 @@ function loop(router, update, view, toRoute, fromRoute, enqueueRender) {
   };
   return /* record */[
           /* init */(function () {
-              var $$location = Router$ReasonTea.getCurrent(router);
+              var $$location = Oolong_Router.getCurrent(router);
               return updateToOptions(Curry._2(fromRoute, /* Init */0, getRoute($$location)));
             }),
           /* listen */(function (callback) {
-              Router$ReasonTea.listen(callback, router);
+              Oolong_Router.listen(callback, router);
               return /* () */0;
             }),
           /* dispatch */(function (action, state) {
               return updateToOptions(Curry._2(update, action, state));
             }),
           /* getFromRoute */(function (action, route) {
-              var $$location = getRoute(Router$ReasonTea.getCurrent(router));
+              var $$location = getRoute(Oolong_Router.getCurrent(router));
               if (Caml_obj.caml_notequal(previousRoute[0], $$location)) {
                 return updateToOptions(Curry._2(fromRoute, action, route));
               } else {
@@ -146,14 +146,14 @@ function loop(router, update, view, toRoute, fromRoute, enqueueRender) {
                 var route = update[0];
                 if (Caml_obj.caml_notequal(previousRoute[0], route)) {
                   previousRoute[0] = route;
-                  router.replace(Route$ReasonTea.toUrl(route));
+                  router.replace(Oolong_Route.toUrl(route));
                 }
                 
               } else {
                 var route$1 = update[0];
                 if (Caml_obj.caml_notequal(previousRoute[0], route$1)) {
                   previousRoute[0] = route$1;
-                  router.push(Route$ReasonTea.toUrl(route$1));
+                  router.push(Oolong_Route.toUrl(route$1));
                 }
                 
               }
@@ -165,7 +165,7 @@ function loop(router, update, view, toRoute, fromRoute, enqueueRender) {
         ];
 }
 
-var defaultRouter = Router$ReasonTea.memory(/* () */0);
+var defaultRouter = Oolong_Router.memory(/* () */0);
 
 function startup($staropt$star, program, renderer) {
   var router = $staropt$star !== undefined ? Js_primitive.valFromOption($staropt$star) : defaultRouter;
@@ -188,6 +188,12 @@ function startup($staropt$star, program, renderer) {
 
 var routerProgram = program;
 
+var Route = 0;
+
+var Router = 0;
+
+exports.Route = Route;
+exports.Router = Router;
 exports.getRoute = getRoute;
 exports.defaultRoute = defaultRoute;
 exports.fromRouteDefault = fromRouteDefault;
