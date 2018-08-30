@@ -1,5 +1,19 @@
 Belt.Debug.setupChromeDebugger();
 
+module S = {
+  /* Because people hate ReasonReact.string() for some reason */
+  let component = ReasonReact.statelessComponent("StringElement");
+
+  let make = children => {
+    ...component,
+    render: _self => {
+      let [|item|] = children;
+
+      ReasonReact.string(item);
+    },
+  };
+};
+
 type state = {counter: int};
 type action =
   | Double(int)
@@ -68,15 +82,15 @@ let app = () => {
       },
     view: self =>
       <div>
-        {ReasonReact.string(string_of_int(self.state.counter))}
+        <S> {string_of_int(self.state.counter)} </S>
         <button onClick={_ => self.send(Increment)}>
-          {ReasonReact.string("Increment")}
+          <S> "Increment" </S>
         </button>
         <button onClick={_ => self.send(Decrement)}>
-          {ReasonReact.string("Decrement")}
+          <S> "Decrement" </S>
         </button>
         <button onClick={_ => self.send(Nothing)}>
-          {ReasonReact.string("Do Nothing")}
+          <S> "Do Nothing" </S>
         </button>
       </div>,
   };
