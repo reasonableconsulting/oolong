@@ -2,7 +2,8 @@
   "name": "@reasonableconsulting/oolong",
   "version": "0.1.0",
   "scripts": {
-    "start": "budo src/Index.bs.js --live",
+    "prestart": "npm run build",
+    "start": "budo example/Index.bs.js --live",
     "build": "bsb -make-world",
     "watch": "bsb -make-world -w",
     "clean": "bsb -clean-world",

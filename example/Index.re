@@ -68,15 +68,15 @@ let app = () => {
       },
     view: self =>
       <div>
-        (ReasonReact.string(string_of_int(self.state.counter)))
-        <button onClick=(_ => self.send(Increment))>
-          (ReasonReact.string("Increment"))
+        {ReasonReact.string(string_of_int(self.state.counter))}
+        <button onClick={_ => self.send(Increment)}>
+          {ReasonReact.string("Increment")}
         </button>
-        <button onClick=(_ => self.send(Decrement))>
-          (ReasonReact.string("Decrement"))
+        <button onClick={_ => self.send(Decrement)}>
+          {ReasonReact.string("Decrement")}
         </button>
-        <button onClick=(_ => self.send(Nothing))>
-          (ReasonReact.string("Do Nothing"))
+        <button onClick={_ => self.send(Nothing)}>
+          {ReasonReact.string("Do Nothing")}
         </button>
       </div>,
   };
