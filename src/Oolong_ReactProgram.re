@@ -13,5 +13,5 @@ let make = (~program, _children) => {
     switch (action) {
     | Render(view) => ReasonReact.Update(view)
     },
-  render: self => self.state,
+  render: self => <> self.state </>,
 };
