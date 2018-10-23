@@ -5,17 +5,11 @@ var Block = require("bs-platform/lib/js/block.js");
 var Curry = require("bs-platform/lib/js/curry.js");
 var React = require("react");
 var Oolong = require("../src/Oolong.bs.js");
-var Caml_obj = require("bs-platform/lib/js/caml_obj.js");
-var Belt_Debug = require("bs-platform/lib/js/belt_Debug.js");
 var ReactDOMRe = require("reason-react/src/ReactDOMRe.js");
 var Caml_format = require("bs-platform/lib/js/caml_format.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
 var Js_primitive = require("bs-platform/lib/js/js_primitive.js");
-var Oolong_Route = require("../src/Oolong_Route.bs.js");
-var Oolong_Router = require("../src/Oolong_Router.bs.js");
-var Caml_builtin_exceptions = require("bs-platform/lib/js/caml_builtin_exceptions.js");
-
-Belt_Debug.setupChromeDebugger(/* () */0);
+var Oolong_Internals = require("../src/Oolong_Internals.bs.js");
 
 var component = ReasonReact.statelessComponent("StringElement");
 
@@ -31,18 +25,7 @@ function make(children) {
           /* willUpdate */component[/* willUpdate */7],
           /* shouldUpdate */component[/* shouldUpdate */8],
           /* render */(function () {
-              if (children.length !== 1) {
-                throw [
-                      Caml_builtin_exceptions.match_failure,
-                      /* tuple */[
-                        "Index.re",
-                        10,
-                        10
-                      ]
-                    ];
-              } else {
-                return children[0];
-              }
+              return children.join(" ");
             }),
           /* initialState */component[/* initialState */10],
           /* retainedProps */component[/* retainedProps */11],
@@ -57,82 +40,156 @@ var S = /* module */[
 ];
 
 function app() {
-  var program = Oolong.routerProgram("CounterApp");
-  var $$double = function (self) {
-    console.log("init side effect");
-    return Curry._1(self[/* send */1], /* Double */[self[/* state */0][/* counter */0]]);
+  var serializeState = function (state) {
+    var match = state[/* user */1];
+    var user = typeof match === "number" ? "" : match[0];
+    return Oolong_Internals.Url[/* make */0](/* :: */[
+                String(state[/* counter */0]),
+                /* [] */0
+              ], "", user);
+  };
+  var program = Oolong.routerProgram(serializeState, "CounterExample");
+  var $$double = function (_, self) {
+    return Curry._1(self[/* send */1], /* Double */Block.__(0, [self[/* state */0][/* counter */0]]));
+  };
+  var login = function (self) {
+    var match = self[/* state */0][/* user */1];
+    if (typeof match === "number" || match.tag !== 1) {
+      return /* () */0;
+    } else {
+      var username = match[0];
+      console.log("Doing login for", username);
+      setTimeout((function () {
+              if (username === "phated") {
+                return Curry._1(self[/* send */1], /* LoginSuccess */Block.__(2, [
+                              username,
+                              "Blaine"
+                            ]));
+              } else {
+                return Curry._1(self[/* send */1], /* LoginFailure */Block.__(3, [username]));
+              }
+            }), 500);
+      return /* () */0;
+    }
+  };
+  var getUser = function (hash) {
+    if (hash === "") {
+      return /* NoUser */0;
+    } else {
+      return /* LoggingIn */Block.__(1, [hash]);
+    }
   };
   return /* record */[
-          /* debug */program[/* debug */0],
-          /* fromRoute */(function (routeAction, route) {
-              if (routeAction !== 0) {
-                var match = route[/* path */0];
-                if (match && match[0] === "") {
-                  var match$1 = match[1];
-                  if (match$1 && !match$1[1]) {
-                    return /* UpdateWithSideEffects */Block.__(1, [
-                              /* record */[/* counter */Caml_format.caml_int_of_string(match$1[0])],
-                              $$double
-                            ]);
-                  } else {
-                    return /* NoUpdate */0;
-                  }
-                } else {
-                  return /* NoUpdate */0;
-                }
+          /* debugName */program[/* debugName */0],
+          /* serializeState */program[/* serializeState */1],
+          /* init */(function (path, _, hash) {
+              if (path && !path[1]) {
+                return /* StateWithSideEffects */Block.__(1, [
+                          /* record */[
+                            /* counter */Caml_format.caml_int_of_string(path[0]),
+                            /* user */getUser(hash)
+                          ],
+                          login
+                        ]);
               } else {
-                var match$2 = route[/* path */0];
-                if (match$2 && match$2[0] === "") {
-                  var match$3 = match$2[1];
-                  if (match$3 && !match$3[1]) {
-                    return /* Update */Block.__(0, [/* record */[/* counter */Caml_format.caml_int_of_string(match$3[0])]]);
-                  } else {
-                    return /* Update */Block.__(0, [/* record */[/* counter */0]]);
-                  }
-                } else {
-                  return /* Update */Block.__(0, [/* record */[/* counter */0]]);
-                }
+                return /* State */Block.__(0, [/* record */[
+                            /* counter */0,
+                            /* user : NoUser */0
+                          ]]);
               }
             }),
-          /* toRoute */(function (param) {
-              var next = param[/* next */1];
-              var previous = param[/* previous */0];
-              console.log("toRoute", previous, next);
-              if (Caml_obj.caml_equal(previous, next)) {
-                return /* NoTransition */1;
+          /* fromRoute */(function (routeAction, _) {
+              console.log("fromRoute", routeAction);
+              var match = routeAction[0];
+              if (match && !match[1]) {
+                return /* StateWithSideEffects */Block.__(1, [
+                          /* record */[
+                            /* counter */Caml_format.caml_int_of_string(match[0]),
+                            /* user */getUser(routeAction[2])
+                          ],
+                          login
+                        ]);
               } else {
-                return /* Push */Block.__(0, [Oolong_Route.make(/* :: */[
-                                "",
-                                /* :: */[
-                                  String(next[/* counter */0]),
-                                  /* [] */0
-                                ]
-                              ], "", "")]);
+                return /* State */Block.__(0, [/* record */[
+                            /* counter */0,
+                            /* user : NoUser */0
+                          ]]);
               }
             }),
-          /* update */(function (action, state) {
+          /* toRoute */(function (action, state) {
+              console.log("reducer", action, state);
               if (typeof action === "number") {
                 switch (action) {
                   case 0 : 
                       console.log("increment");
-                      return /* UpdateWithSideEffects */Block.__(1, [
-                                /* record */[/* counter */state[/* counter */0] + 1 | 0],
-                                $$double
-                              ]);
+                      return /* Push */Block.__(0, [/* record */[
+                                  /* counter */state[/* counter */0] + 1 | 0,
+                                  /* user */state[/* user */1]
+                                ]]);
                   case 1 : 
                       console.log("decrement");
-                      return /* Update */Block.__(0, [/* record */[/* counter */state[/* counter */0] - 1 | 0]]);
+                      return /* Push */Block.__(0, [/* record */[
+                                  /* counter */state[/* counter */0] - 1 | 0,
+                                  /* user */state[/* user */1]
+                                ]]);
                   case 2 : 
                       console.log("nothing");
-                      return /* NoUpdate */0;
+                      return /* Replace */Block.__(2, [state]);
                   
                 }
               } else {
-                console.log("double");
-                return /* Update */Block.__(0, [/* record */[/* counter */(action[0] << 1)]]);
+                switch (action.tag | 0) {
+                  case 0 : 
+                      console.log("double");
+                      return /* Replace */Block.__(2, [/* record */[
+                                  /* counter */(action[0] << 1),
+                                  /* user */state[/* user */1]
+                                ]]);
+                  case 1 : 
+                      return /* PushWithSideEffects */Block.__(1, [
+                                /* record */[
+                                  /* counter */state[/* counter */0],
+                                  /* user : LoggingIn */Block.__(1, [action[0]])
+                                ],
+                                login
+                              ]);
+                  case 2 : 
+                      return /* Replace */Block.__(2, [/* record */[
+                                  /* counter */state[/* counter */0],
+                                  /* user : LoggedIn */Block.__(2, [
+                                      action[0],
+                                      action[1]
+                                    ])
+                                ]]);
+                  case 3 : 
+                      return /* Replace */Block.__(2, [/* record */[
+                                  /* counter */state[/* counter */0],
+                                  /* user : InvalidUser */Block.__(0, [action[0]])
+                                ]]);
+                  
+                }
               }
             }),
-          /* view */(function (self) {
+          /* render */(function (self) {
+              console.log("render", self);
+              var match = self[/* state */0][/* user */1];
+              var userMessage;
+              if (typeof match === "number") {
+                userMessage = "Not logged in.";
+              } else {
+                switch (match.tag | 0) {
+                  case 0 : 
+                      userMessage = match[0] + " is an invalid user";
+                      break;
+                  case 1 : 
+                      userMessage = "Logging in as: " + match[0];
+                      break;
+                  case 2 : 
+                      userMessage = "Welcome " + (match[1] + "!");
+                      break;
+                  
+                }
+              }
               return React.createElement("div", undefined, ReasonReact.element(undefined, undefined, make(/* array */[String(self[/* state */0][/* counter */0])])), React.createElement("button", {
                               onClick: (function () {
                                   return Curry._1(self[/* send */1], /* Increment */0);
@@ -142,11 +199,18 @@ function app() {
                                   return Curry._1(self[/* send */1], /* Decrement */1);
                                 })
                             }, ReasonReact.element(undefined, undefined, make(/* array */["Decrement"]))), React.createElement("button", {
+                              onClick: Curry._1(self[/* handle */2], $$double)
+                            }, ReasonReact.element(undefined, undefined, make(/* array */["Double"]))), React.createElement("button", {
                               onClick: (function () {
                                   return Curry._1(self[/* send */1], /* Nothing */2);
                                 })
-                            }, ReasonReact.element(undefined, undefined, make(/* array */["Do Nothing"]))));
-            })
+                            }, ReasonReact.element(undefined, undefined, make(/* array */["Do Nothing"]))), React.createElement("button", {
+                              onClick: (function () {
+                                  return Curry._1(self[/* send */1], /* Login */Block.__(1, ["phated"]));
+                                })
+                            }, ReasonReact.element(undefined, undefined, make(/* array */["Login as phated"]))), React.createElement("div", undefined, ReasonReact.element(undefined, undefined, make(/* array */[userMessage]))));
+            }),
+          /* subscriptions */program[/* subscriptions */6]
         ];
 }
 
@@ -158,10 +222,10 @@ function app() {
   }()
 ));
 
-Oolong.startup(Js_primitive.some(Oolong_Router.hash(/* () */0)), app(/* () */0), (function (view) {
+Oolong.RouterProgram[/* run */5](Js_primitive.some(Oolong_Internals.Router[/* hash */4](/* () */0)), app(/* () */0))((function (view) {
         return ReactDOMRe.renderToElementWithId(view, "app");
       }));
 
 exports.S = S;
 exports.app = app;
-/*  Not a pure module */
+/* component Not a pure module */
