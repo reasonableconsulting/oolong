@@ -222,7 +222,7 @@ function app() {
   }()
 ));
 
-Oolong.RouterProgram[/* run */5](Js_primitive.some(Oolong_Internals.Router[/* hash */4](/* () */0)), app(/* () */0))((function (view) {
+Oolong.run(Js_primitive.some(Oolong_Internals.Router[/* hash */4](/* () */0)), app(/* () */0))((function (view) {
         return ReactDOMRe.renderToElementWithId(view, "app");
       }));
 
