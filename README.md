@@ -4,7 +4,7 @@ Better Application Development
 
 ## Usage
 
-```reasonml
+```reason
 type state = {counter: int};
 type action =
   | Double(int)
