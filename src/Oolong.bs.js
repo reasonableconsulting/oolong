@@ -38,52 +38,6 @@ function make(debugName) {
         ];
 }
 
-function run(program, callback) {
-  var state = /* record */[/* contents */Curry._1(program[/* initialState */1], /* () */0)];
-  var loopCounter = /* record */[/* contents */0];
-  var getState = function (param) {
-    return state[0];
-  };
-  var send = function (action) {
-    loopCounter[0] = loopCounter[0] + 1 | 0;
-    var previous = state[0];
-    var update = Curry._2(program[/* reducer */2], action, previous);
-    if (typeof update !== "number") {
-      switch (update.tag | 0) {
-        case 0 : 
-            state[0] = update[0];
-            break;
-        case 1 : 
-            state[0] = update[0];
-            Curry._1(update[1], makeSelf(send, getState));
-            break;
-        case 2 : 
-            Curry._1(update[0], makeSelf(send, getState));
-            break;
-        
-      }
-    }
-    var next = state[0];
-    loopCounter[0] = loopCounter[0] - 1 | 0;
-    if (loopCounter[0] === 0 && next !== previous) {
-      Curry._1(callback, Curry._1(program[/* render */3], makeSelf(send, getState)));
-      return /* () */0;
-    } else {
-      return 0;
-    }
-  };
-  Belt_List.forEach(Curry._1(program[/* subscriptions */4], state[0]), (function (subscription) {
-          return Curry._1(subscription, makeSelf(send, getState));
-        }));
-  Curry._1(callback, Curry._1(program[/* render */3], makeSelf(send, getState)));
-  return /* () */0;
-}
-
-var BasicProgram = /* module */[
-  /* make */make,
-  /* run */run
-];
-
 function make$1(serializeState, debugName) {
   return /* record */[
           /* debugName */debugName,
@@ -106,10 +60,6 @@ function make$1(serializeState, debugName) {
         ];
 }
 
-function getUserState(param) {
-  return param[0];
-}
-
 function getUserSelf(ourSelf) {
   var send = function (action) {
     return Curry._1(ourSelf[/* send */1], /* UserAction */Block.__(0, [action]));
@@ -128,7 +78,7 @@ function emptySideEffect(_self) {
   return /* () */0;
 }
 
-function run$1(router, program) {
+function run(router, program) {
   var router$1 = router !== undefined ? Caml_option.valFromOption(router) : Oolong_Internals.Router[/* hash */4](/* () */0);
   var ourProgram = make(program[/* debugName */0] + "_Internal");
   var initialRoute = Oolong_Internals.Route[/* fromLocation */4](Oolong_Internals.Router[/* getCurrent */6](router$1));
@@ -239,18 +189,48 @@ function run$1(router, program) {
     /* subscriptions */subscriptions
   ];
   return (function (param) {
-      return run(partial_arg, param);
+      var program = partial_arg;
+      var callback = param;
+      var state = /* record */[/* contents */Curry._1(program[/* initialState */1], /* () */0)];
+      var loopCounter = /* record */[/* contents */0];
+      var getState = function (param) {
+        return state[0];
+      };
+      var send = function (action) {
+        loopCounter[0] = loopCounter[0] + 1 | 0;
+        var previous = state[0];
+        var update = Curry._2(program[/* reducer */2], action, previous);
+        if (typeof update !== "number") {
+          switch (update.tag | 0) {
+            case 0 : 
+                state[0] = update[0];
+                break;
+            case 1 : 
+                state[0] = update[0];
+                Curry._1(update[1], makeSelf(send, getState));
+                break;
+            case 2 : 
+                Curry._1(update[0], makeSelf(send, getState));
+                break;
+            
+          }
+        }
+        var next = state[0];
+        loopCounter[0] = loopCounter[0] - 1 | 0;
+        if (loopCounter[0] === 0 && next !== previous) {
+          Curry._1(callback, Curry._1(program[/* render */3], makeSelf(send, getState)));
+          return /* () */0;
+        } else {
+          return 0;
+        }
+      };
+      Belt_List.forEach(Curry._1(program[/* subscriptions */4], state[0]), (function (subscription) {
+              return Curry._1(subscription, makeSelf(send, getState));
+            }));
+      Curry._1(callback, Curry._1(program[/* render */3], makeSelf(send, getState)));
+      return /* () */0;
     });
 }
-
-var RouterProgram = /* module */[
-  /* make */make$1,
-  /* getUserState */getUserState,
-  /* getUserSelf */getUserSelf,
-  /* wrapSideEffect */wrapSideEffect,
-  /* emptySideEffect */emptySideEffect,
-  /* run */run$1
-];
 
 var component = ReasonReact.reducerComponent("ApplicationContainer");
 
@@ -261,7 +241,7 @@ function make$2(program, router, _children) {
           /* handedOffState */component[/* handedOffState */2],
           /* willReceiveProps */component[/* willReceiveProps */3],
           /* didMount */(function (self) {
-              return run$1(router, Curry._1(program, /* () */0))((function (view) {
+              return run(router, Curry._1(program, /* () */0))((function (view) {
                             return Curry._1(self[/* send */3], /* Render */[view]);
                           }));
             }),
@@ -296,16 +276,19 @@ var Router = 0;
 
 var RouterAction = 0;
 
+var RouterProgram = [
+  make$1,
+  run
+];
+
 var routerProgram = make$1;
 
-exports.makeSelf = makeSelf;
 exports.Url = Url;
 exports.Route = Route;
 exports.Router = Router;
 exports.RouterAction = RouterAction;
-exports.BasicProgram = BasicProgram;
 exports.RouterProgram = RouterProgram;
 exports.ReactProgram = ReactProgram;
 exports.routerProgram = routerProgram;
-exports.run = run$1;
+exports.run = run;
 /* component Not a pure module */
