@@ -172,6 +172,6 @@ let app = () => {
 |}
 ];
 
-Oolong.RouterProgram.run(~router=Oolong.Router.hash(), app(), view =>
+Oolong.run(~router=Oolong.Router.hash(), app(), view =>
   ReactDOMRe.renderToElementWithId(view, "app")
 );
