@@ -1,6 +1,6 @@
 {
   "name": "@reasonableconsulting/oolong",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "scripts": {
     "prestart": "npm run build",
     "start": "budo example/Index.bs.js --live",
