@@ -29,6 +29,10 @@ let rec makeSelf = (send, getState) => {
   handle: (fn, data) => fn(data, makeSelf(send, getState)),
 };
 
+let state = state => State(state);
+let stateWithSideEffects = (state, sideEffect) =>
+  StateWithSideEffects(state, sideEffect);
+
 module Url = Oolong_Internals.Url;
 module Route = Oolong_Internals.Route;
 module Router = Oolong_Internals.Router;

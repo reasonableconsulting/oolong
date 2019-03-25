@@ -20,6 +20,17 @@ function makeSelf(send, getState) {
         ];
 }
 
+function state(state$1) {
+  return /* State */Block.__(0, [state$1]);
+}
+
+function stateWithSideEffects(state, sideEffect) {
+  return /* StateWithSideEffects */Block.__(1, [
+            state,
+            sideEffect
+          ]);
+}
+
 function make(debugName) {
   return /* record */[
           /* debugName */debugName,
@@ -283,6 +294,8 @@ var RouterProgram = [
 
 var routerProgram = make$1;
 
+exports.state = state;
+exports.stateWithSideEffects = stateWithSideEffects;
 exports.Url = Url;
 exports.Route = Route;
 exports.Router = Router;

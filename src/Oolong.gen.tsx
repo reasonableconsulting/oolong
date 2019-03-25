@@ -29,10 +29,9 @@ export type self<action,state> = {
 // tslint:disable-next-line:interface-over-type-literal
 export type sideEffect<action,state> = (_1:self<action,state>) => void;
 
-// tslint:disable-next-line:interface-over-type-literal
-export type routeState<action,state> = 
-  | { tag: "State"; value: state }
-  | { tag: "StateWithSideEffects"; value: [state, sideEffect<action,state>] };
+// tslint:disable-next-line:max-classes-per-file 
+// tslint:disable-next-line:class-name
+export abstract class routeState<action,state> { protected opaque!: action | state }; /* simulate opaque types */
 
 // tslint:disable-next-line:interface-over-type-literal
 export type routerUpdate<action,state> = 
@@ -54,94 +53,78 @@ export type RouterProgram_t<action,state,view> = {
   readonly subscriptions: (_1:state) => list<sideEffect<action,state>>
 };
 
+export const state: <action,state>(_1:state) => routeState<action,state> = OolongBS.state;
+
+export const stateWithSideEffects: <action,state>(_1:state, _2:sideEffect<action,state>) => routeState<action,state> = function <action,state>(Arg1: any, Arg2: any) {
+  const result = Curry._2(OolongBS.stateWithSideEffects, Arg1, function (Arg11: any) {
+      const result1 = Arg2({state:Arg11[0], send:Arg11[1], handle:Arg11[2]});
+      return result1
+    });
+  return result
+};
+
 export const routerProgram: <action,state,view>(_1:{ readonly serializeState: ((_1:state) => string) }, _2:string) => RouterProgram_t<action,state,view> = function <action,state,view>(Arg1: any, Arg2: any) {
   const result = Curry._2(OolongBS.routerProgram, Arg1.serializeState, Arg2);
   return {debugName:result[0], serializeState:result[1], init:function (Arg11: any, Arg21: any, Arg3: any) {
       const result1 = Curry._3(result[2], Arg11, Arg21, Arg3);
-      return result1.tag===0
-        ? {tag:"State", value:result1[0]}
-        : {tag:"StateWithSideEffects", value:[result1.slice()[0], function (Arg12: any) {
-          const result2 = result1.slice()[1]([Arg12.state, Arg12.send, Arg12.handle]);
-          return result2
-        }]}
-    }, fromRoute:function (Arg13: any, Arg22: any) {
-      const result3 = Curry._2(result[3], Arg13, Arg22);
-      return result3.tag===0
-        ? {tag:"State", value:result3[0]}
-        : {tag:"StateWithSideEffects", value:[result3.slice()[0], function (Arg14: any) {
-          const result4 = result3.slice()[1]([Arg14.state, Arg14.send, Arg14.handle]);
-          return result4
-        }]}
-    }, toRoute:function (Arg15: any, Arg23: any) {
-      const result5 = Curry._2(result[4], Arg15, Arg23);
-      return typeof(result5) === 'object'
-        ? result5.tag===0
-          ? {tag:"Push", value:result5[0]}
-          : result5.tag===1
-          ? {tag:"PushWithSideEffects", value:[result5.slice()[0], function (Arg16: any) {
-            const result6 = result5.slice()[1]([Arg16.state, Arg16.send, Arg16.handle]);
+      return result1
+    }, fromRoute:function (Arg12: any, Arg22: any) {
+      const result2 = Curry._2(result[3], Arg12, Arg22);
+      return result2
+    }, toRoute:function (Arg13: any, Arg23: any) {
+      const result3 = Curry._2(result[4], Arg13, Arg23);
+      return typeof(result3) === 'object'
+        ? result3.tag===0
+          ? {tag:"Push", value:result3[0]}
+          : result3.tag===1
+          ? {tag:"PushWithSideEffects", value:[result3.slice()[0], function (Arg14: any) {
+            const result4 = result3.slice()[1]([Arg14.state, Arg14.send, Arg14.handle]);
+            return result4
+          }]}
+          : result3.tag===2
+          ? {tag:"Replace", value:result3[0]}
+          : result3.tag===3
+          ? {tag:"ReplaceWithSideEffects", value:[result3.slice()[0], function (Arg15: any) {
+            const result5 = result3.slice()[1]([Arg15.state, Arg15.send, Arg15.handle]);
+            return result5
+          }]}
+          : {tag:"PopWithSideEffects", value:function (Arg16: any) {
+            const result6 = result3[0]([Arg16.state, Arg16.send, Arg16.handle]);
             return result6
-          }]}
-          : result5.tag===2
-          ? {tag:"Replace", value:result5[0]}
-          : result5.tag===3
-          ? {tag:"ReplaceWithSideEffects", value:[result5.slice()[0], function (Arg17: any) {
-            const result7 = result5.slice()[1]([Arg17.state, Arg17.send, Arg17.handle]);
-            return result7
-          }]}
-          : {tag:"PopWithSideEffects", value:function (Arg18: any) {
-            const result8 = result5[0]([Arg18.state, Arg18.send, Arg18.handle]);
-            return result8
           }}
-        : $$toJS443305185[result5]
-    }, render:function (Arg19: any) {
-      const result9 = result[5]([Arg19.state, Arg19.send, Arg19.handle]);
-      return result9
+        : $$toJS443305185[result3]
+    }, render:function (Arg17: any) {
+      const result7 = result[5]([Arg17.state, Arg17.send, Arg17.handle]);
+      return result7
     }, subscriptions:result[6]}
 };
 
-export const run: <action,state,view>(_1:{ readonly router?: Oolong_Internals_Router_t }, _2:RouterProgram_t<action,state,view>, _3:((_1:view) => void)) => void = function <action,state,view>(Arg1: any, Arg2: any, Arg31: any) {
-  const result = Curry._3(OolongBS.run, Arg1.router, [Arg2.debugName, Arg2.serializeState, function (Arg11: any, Arg21: any, Arg3: any) {
-      const result1 = Arg2.init(Arg11, Arg21, Arg3);
-      return result1.tag==="State"
-        ? CreateBucklescriptBlock.__(0, [result1.value])
-        : CreateBucklescriptBlock.__(1, [result1.value[0], function (Arg12: any) {
-          const result2 = result1.value[1]({state:Arg12[0], send:Arg12[1], handle:Arg12[2]});
-          return result2
-        }])
-    }, function (Arg13: any, Arg22: any) {
-      const result3 = Arg2.fromRoute(Arg13, Arg22);
-      return result3.tag==="State"
-        ? CreateBucklescriptBlock.__(0, [result3.value])
-        : CreateBucklescriptBlock.__(1, [result3.value[0], function (Arg14: any) {
-          const result4 = result3.value[1]({state:Arg14[0], send:Arg14[1], handle:Arg14[2]});
-          return result4
-        }])
-    }, function (Arg15: any, Arg23: any) {
-      const result5 = Arg2.toRoute(Arg15, Arg23);
-      return typeof(result5) === 'object'
-        ? result5.tag==="Push"
-          ? CreateBucklescriptBlock.__(0, [result5.value])
-          : result5.tag==="PushWithSideEffects"
-          ? CreateBucklescriptBlock.__(1, [result5.value[0], function (Arg16: any) {
-            const result6 = result5.value[1]({state:Arg16[0], send:Arg16[1], handle:Arg16[2]});
-            return result6
+export const run: <action,state,view>(_1:{ readonly router?: Oolong_Internals_Router_t }, _2:RouterProgram_t<action,state,view>, _3:((_1:view) => void)) => void = function <action,state,view>(Arg1: any, Arg2: any, Arg3: any) {
+  const result = Curry._3(OolongBS.run, Arg1.router, [Arg2.debugName, Arg2.serializeState, Arg2.init, Arg2.fromRoute, function (Arg11: any, Arg21: any) {
+      const result1 = Arg2.toRoute(Arg11, Arg21);
+      return typeof(result1) === 'object'
+        ? result1.tag==="Push"
+          ? CreateBucklescriptBlock.__(0, [result1.value])
+          : result1.tag==="PushWithSideEffects"
+          ? CreateBucklescriptBlock.__(1, [result1.value[0], function (Arg12: any) {
+            const result2 = result1.value[1]({state:Arg12[0], send:Arg12[1], handle:Arg12[2]});
+            return result2
           }])
-          : result5.tag==="Replace"
-          ? CreateBucklescriptBlock.__(2, [result5.value])
-          : result5.tag==="ReplaceWithSideEffects"
-          ? CreateBucklescriptBlock.__(3, [result5.value[0], function (Arg17: any) {
-            const result7 = result5.value[1]({state:Arg17[0], send:Arg17[1], handle:Arg17[2]});
-            return result7
+          : result1.tag==="Replace"
+          ? CreateBucklescriptBlock.__(2, [result1.value])
+          : result1.tag==="ReplaceWithSideEffects"
+          ? CreateBucklescriptBlock.__(3, [result1.value[0], function (Arg13: any) {
+            const result3 = result1.value[1]({state:Arg13[0], send:Arg13[1], handle:Arg13[2]});
+            return result3
           }])
-          : CreateBucklescriptBlock.__(4, [function (Arg18: any) {
-            const result8 = result5.value({state:Arg18[0], send:Arg18[1], handle:Arg18[2]});
-            return result8
+          : CreateBucklescriptBlock.__(4, [function (Arg14: any) {
+            const result4 = result1.value({state:Arg14[0], send:Arg14[1], handle:Arg14[2]});
+            return result4
           }])
-        : $$toRE443305185[result5]
-    }, function (Arg19: any) {
-      const result9 = Arg2.render({state:Arg19[0], send:Arg19[1], handle:Arg19[2]});
-      return result9
-    }, Arg2.subscriptions], Arg31);
+        : $$toRE443305185[result1]
+    }, function (Arg15: any) {
+      const result5 = Arg2.render({state:Arg15[0], send:Arg15[1], handle:Arg15[2]});
+      return result5
+    }, Arg2.subscriptions], Arg3);
   return result
 };

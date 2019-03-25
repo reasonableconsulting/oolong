@@ -7,6 +7,7 @@ type self('action, 'state) = {
 
 }
 and sideEffect('action, 'state) = self('action, 'state) => unit
+[@genType.opaque]
 and routeState('action, 'state) =
   | State('state)
   | StateWithSideEffects('state, sideEffect('action, 'state))
@@ -22,6 +23,12 @@ and routerUpdate('action, 'state) =
   | ReplaceWithSideEffects('state, sideEffect('action, 'state))
   | Pop
   | PopWithSideEffects(sideEffect('action, 'state));
+
+[@genType]
+let state: 'state => routeState('action, 'state);
+[@genType]
+let stateWithSideEffects:
+  ('state, sideEffect('action, 'state)) => routeState('action, 'state);
 
 module Url = Oolong_Internals.Url;
 module Route = Oolong_Internals.Route;
