@@ -33,7 +33,8 @@ module RouterProgram: {
     debugName: string,
     serializeState: 'state => string,
     init: (list(string), string, string) => routeState('action, 'state),
-    fromRoute: (RouterAction.t, 'state) => routeState('action, 'state),
+    fromRoute:
+      (Oolong_Internals.RouterAction.t, 'state) => routeState('action, 'state),
     toRoute: ('action, 'state) => routerUpdate('action, 'state),
     render: self('action, 'state) => 'view,
     subscriptions: 'state => list(sideEffect('action, 'state)),
@@ -83,7 +84,7 @@ let routerProgram:
 [@genType]
 let run:
   (
-    ~router: Router.t=?,
+    ~router: Oolong_Internals.Router.t=?,
     RouterProgram.t('action, 'state, 'view),
     'view => unit
   ) =>

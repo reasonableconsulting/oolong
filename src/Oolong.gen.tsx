@@ -13,6 +13,10 @@ const Curry = require('bs-platform/lib/es6/curry.js');
 // tslint:disable-next-line:no-var-requires
 const OolongBS = require('./Oolong.bs');
 
+import {RouterAction_t as Oolong_Internals_RouterAction_t} from './Oolong_Internals.gen';
+
+import {Router_t as Oolong_Internals_Router_t} from './Oolong_Internals.gen';
+
 import {list} from '../src/shims/ReasonPervasives.shim';
 
 // tslint:disable-next-line:interface-over-type-literal
@@ -44,7 +48,7 @@ export type RouterProgram_t<action,state,view> = {
   readonly debugName: string; 
   readonly serializeState: (_1:state) => string; 
   readonly init: (_1:list<string>, _2:string, _3:string) => routeState<action,state>; 
-  readonly fromRoute: (_1:RouterAction_t, _2:state) => routeState<action,state>; 
+  readonly fromRoute: (_1:Oolong_Internals_RouterAction_t, _2:state) => routeState<action,state>; 
   readonly toRoute: (_1:action, _2:state) => routerUpdate<action,state>; 
   readonly render: (_1:self<action,state>) => view; 
   readonly subscriptions: (_1:state) => list<sideEffect<action,state>>
@@ -96,7 +100,7 @@ export const routerProgram: <action,state,view>(_1:{ readonly serializeState: ((
     }, subscriptions:result[6]}
 };
 
-export const run: <action,state,view>(_1:{ readonly router?: Router_t }, _2:RouterProgram_t<action,state,view>, _3:((_1:view) => void)) => void = function <action,state,view>(Arg1: any, Arg2: any, Arg31: any) {
+export const run: <action,state,view>(_1:{ readonly router?: Oolong_Internals_Router_t }, _2:RouterProgram_t<action,state,view>, _3:((_1:view) => void)) => void = function <action,state,view>(Arg1: any, Arg2: any, Arg31: any) {
   const result = Curry._3(OolongBS.run, Arg1.router, [Arg2.debugName, Arg2.serializeState, function (Arg11: any, Arg21: any, Arg3: any) {
       const result1 = Arg2.init(Arg11, Arg21, Arg3);
       return result1.tag==="State"
