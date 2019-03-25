@@ -29,7 +29,9 @@
   "refmt": 3,
   "gentypeconfig": {
     "language": "typescript",
-    "shims": {},
+    "shims": {
+      "ReasonPervasives": "ReasonPervasives"
+    },
     "debug": {
       "all": false,
       "basic": false

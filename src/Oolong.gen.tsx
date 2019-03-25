@@ -13,7 +13,7 @@ const Curry = require('bs-platform/lib/es6/curry.js');
 // tslint:disable-next-line:no-var-requires
 const OolongBS = require('./Oolong.bs');
 
-import {list} from './ReasonPervasives.gen';
+import {list} from './ReasonPervasives.shim';
 
 // tslint:disable-next-line:interface-over-type-literal
 export type self<action,state> = {
