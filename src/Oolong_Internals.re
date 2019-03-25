@@ -39,6 +39,7 @@ module Route = {
 };
 
 module RouterAction = {
+  [@genType]
   type t =
     | Push(list(string), string, string)
     | Pop(list(string), string, string)
@@ -54,6 +55,7 @@ module RouterAction = {
 };
 
 module Router = {
+  [@genType.opaque]
   type t = BsHistory.t;
 
   let atomic = ref(false);
@@ -70,12 +72,14 @@ module Router = {
   let listen = (callback, router) =>
     BsHistory.listen(wrapCallback(callback), router);
 
+  [@genType]
   let hash: unit => t =
     () => {
       let historyOpts = BsHistory.makeHashHistoryOptions(~basename="");
       BsHistory.createHashHistory(historyOpts);
     };
 
+  [@genType]
   let memory: unit => t =
     () => {
       let historyOpts =
