@@ -75,10 +75,12 @@ module ReactProgram: {
     );
 };
 
+[@genType]
 let routerProgram:
   (~serializeState: 'state => string, string) =>
   RouterProgram.t('action, 'state, 'view);
 
+[@genType]
 let run:
   (
     ~router: Router.t=?,

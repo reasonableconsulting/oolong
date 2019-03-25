@@ -26,5 +26,13 @@
   "bsc-flags": [
     "-bs-super-errors",
   ],
-  "refmt": 3
+  "refmt": 3,
+  "gentypeconfig": {
+    "language": "typescript",
+    "shims": {},
+    "debug": {
+      "all": false,
+      "basic": false
+    }
+  }
 }

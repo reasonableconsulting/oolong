@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "bs-platform": "^5.0.0",
-    "budo": "^11.3.2"
+    "budo": "^11.3.2",
+    "gentype": "^2.17.0"
   }
 }
