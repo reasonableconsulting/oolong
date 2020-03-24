@@ -30,6 +30,7 @@
   "refmt": 3,
   "gentypeconfig": {
     "language": "typescript",
+    "module": "commonjs",
     "shims": {
       "ReasonPervasives": "ReasonPervasives"
     },

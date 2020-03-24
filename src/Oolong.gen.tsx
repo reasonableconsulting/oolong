@@ -5,19 +5,24 @@ const $$toRE443305185 = {"Pop": 0};
 const $$toJS443305185 = {"0": "Pop"};
 
 // tslint:disable-next-line:no-var-requires
-const CreateBucklescriptBlock = require('bs-platform/lib/es6/block.js');
+const CreateBucklescriptBlock = require('bs-platform/lib/js/block.js');
 
 // tslint:disable-next-line:no-var-requires
-const Curry = require('bs-platform/lib/es6/curry.js');
+const Curry = require('bs-platform/lib/js/curry.js');
 
 // tslint:disable-next-line:no-var-requires
 const OolongBS = require('./Oolong.bs');
+
+// tslint:disable-next-line:no-var-requires
+const ReasonReact = require('reason-react/src/ReasonReact.js');
 
 import {RouterAction_t as Oolong_Internals_RouterAction_t} from './Oolong_Internals.gen';
 
 import {Router_t as Oolong_Internals_Router_t} from './Oolong_Internals.gen';
 
 import {list} from '../src/shims/ReasonPervasives.shim';
+
+import {reactElement as ReasonReact_reactElement} from './ReasonReact.gen';
 
 // tslint:disable-next-line:interface-over-type-literal
 export type self<action,state> = {
@@ -62,6 +67,47 @@ export const stateWithSideEffects: <action,state>(_1:state, _2:sideEffect<action
     });
   return result
 };
+
+// tslint:disable-next-line:interface-over-type-literal
+export type ReactProgram_Props = {
+  readonly program: (_1:void) => RouterProgram_t<unknown,unknown,ReasonReact_reactElement>; 
+  readonly router?: Router_t; 
+  readonly children?: void[]
+};
+
+export const ReactProgram: React.ComponentClass<ReactProgram_Props> = ReasonReact.wrapReasonForJs(
+  OolongBS.ReactProgram[0],
+  (function _(jsProps: ReactProgram_Props) {
+     return Curry._3(OolongBS.ReactProgram[1], function (Arg1: any) {
+  const result = jsProps.program(Arg1);
+  return [result.debugName, result.serializeState, result.init, result.fromRoute, function (Arg11: any, Arg2: any) {
+      const result1 = result.toRoute(Arg11, Arg2);
+      return typeof(result1) === 'object'
+        ? result1.tag==="Push"
+          ? CreateBucklescriptBlock.__(0, [result1.value])
+          : result1.tag==="PushWithSideEffects"
+          ? CreateBucklescriptBlock.__(1, [result1.value[0], function (Arg12: any) {
+            const result2 = result1.value[1]({state:Arg12[0], send:Arg12[1], handle:Arg12[2]});
+            return result2
+          }])
+          : result1.tag==="Replace"
+          ? CreateBucklescriptBlock.__(2, [result1.value])
+          : result1.tag==="ReplaceWithSideEffects"
+          ? CreateBucklescriptBlock.__(3, [result1.value[0], function (Arg13: any) {
+            const result3 = result1.value[1]({state:Arg13[0], send:Arg13[1], handle:Arg13[2]});
+            return result3
+          }])
+          : CreateBucklescriptBlock.__(4, [function (Arg14: any) {
+            const result4 = result1.value({state:Arg14[0], send:Arg14[1], handle:Arg14[2]});
+            return result4
+          }])
+        : $$toRE443305185[result1]
+    }, function (Arg15: any) {
+      const result5 = result.render({state:Arg15[0], send:Arg15[1], handle:Arg15[2]});
+      return result5
+    }, result.subscriptions]
+}, jsProps.router, jsProps.children);
+  }));
 
 export const routerProgram: <action,state,view>(_1:{ readonly serializeState: ((_1:state) => string) }, _2:string) => RouterProgram_t<action,state,view> = function <action,state,view>(Arg1: any, Arg2: any) {
   const result = Curry._2(OolongBS.routerProgram, Arg1.serializeState, Arg2);

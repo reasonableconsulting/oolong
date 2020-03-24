@@ -67,6 +67,7 @@ module ReactProgram: {
       action,
     );
 
+  [@genType]
   let make:
     (
       ~program: unit =>
